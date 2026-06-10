@@ -7,14 +7,14 @@
   <style>
     body { font-family: Arial, sans-serif; margin:20px; background:#f4f6f8; }
     h1 { margin-bottom:10px; }
+    h2 { margin-top:30px; }
     .status { font-weight:bold; margin:10px 0; }
-    .filters, .tabs { margin:15px 0; }
-    select, input, button { padding:6px; margin-right:8px; }
-    button { cursor:pointer; }
+    .filters { margin:15px 0; }
+    select, input { padding:6px; margin-right:10px; }
     table { border-collapse:collapse; width:100%; background:#fff; margin-top:10px; }
     th, td { border:1px solid #ccc; padding:6px; text-align:left; }
     th { background:#eee; }
-    .hidden { display:none; }
+    .box { background:#fff; padding:15px; margin-bottom:25px; border-radius:6px; }
   </style>
 </head>
 
@@ -33,24 +33,35 @@
   <select id="filtroDireccion"></select>
 </div>
 
-<div class="tabs">
-  <button onclick="showTab(1)">Producto x Distrito</button>
-  <button onclick="showTab(2)">Cliente x Distrito</button>
-  <button onclick="showTab(3)">Producto x Cliente (S/)</button>
-  <button onclick="showTab(4)">Ventas x Cliente (Cantidad)</button>
+<!-- TABLA 1 -->
+<div class="box">
+  <h2>Tabla 1 – Producto x Distrito</h2>
+  <div id="tabla1"></div>
 </div>
 
-<div id="tab1"></div>
-<div id="tab2" class="hidden"></div>
-<div id="tab3" class="hidden"></div>
-<div id="tab4" class="hidden"></div>
+<!-- TABLA 2 -->
+<div class="box">
+  <h2>Tabla 2 – Cliente x Distrito</h2>
+  <div id="tabla2"></div>
+</div>
+
+<!-- TABLA 3 -->
+<div class="box">
+  <h2>Tabla 3 – Producto x Cliente (Monto)</h2>
+  <div id="tabla3"></div>
+</div>
+
+<!-- TABLA 4 -->
+<div class="box">
+  <h2>Tabla 4 – Ventas x Cliente (Cantidad)</h2>
+  <div id="tabla4"></div>
+</div>
 
 <script type="module">
   import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
   let data = [];
 
-  // Normalizar encabezados (quita tildes)
   const norm = t =>
     t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 
@@ -58,7 +69,7 @@
     const file = e.target.files[0];
     if (!file) return;
 
-    document.getElementById("status").textContent = "⏳ Procesando archivo...";
+    status.textContent = "⏳ Procesando archivo...";
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -66,18 +77,16 @@
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval:"" });
 
-      // Normalizar columnas
       data = rows.map(r => {
         const o = {};
         Object.keys(r).forEach(k => o[norm(k)] = r[k]);
         return o;
       });
 
-      document.getElementById("status").textContent =
-        `✅ Archivo cargado (${data.length} filas)`;
+      status.textContent = `✅ Archivo cargado (${data.length} filas)`;
 
       cargarFiltros();
-      renderAll();
+      recalcular();
     };
     reader.readAsArrayBuffer(file);
   });
@@ -89,52 +98,47 @@
     llenar("filtroDireccion",
       [...new Set(data.map(d => d["DIRECCION (CLIENTE)"]).filter(Boolean))]
     );
+
+    filtroDistrito.onchange = recalcular;
+    filtroDireccion.onchange = recalcular;
   }
 
   function llenar(id, vals) {
     const s = document.getElementById(id);
     s.innerHTML = "<option value=''>Todos</option>";
     vals.forEach(v => s.innerHTML += `<option>${v}</option>`);
-    s.onchange = renderAll;
   }
 
-  window.showTab = n => {
-    [1,2,3,4].forEach(i =>
-      document.getElementById("tab"+i).classList.add("hidden")
-    );
-    document.getElementById("tab"+n).classList.remove("hidden");
-  };
-
-  function renderAll() {
+  function recalcular() {
     const d = filtroDistrito.value;
     const c = filtroDireccion.value;
 
-    renderTabla(filtrar(d,null),
-      "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab1");
+    renderSimple(filtrar(d,null),
+      "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tabla1");
 
-    renderTablaMulti(filtrar(d,null),
-      ["DIRECCION (CLIENTE)", "NOMBRE (CLIENTE)"],
-      "TOTAL (ITEM)", "tab2");
+    renderMultiple(filtrar(d,null),
+      ["DIRECCION (CLIENTE)","NOMBRE (CLIENTE)"],
+      "TOTAL (ITEM)", "tabla2");
 
-    renderTabla(filtrar(null,c),
-      "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab3");
+    renderSimple(filtrar(null,c),
+      "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tabla3");
 
-    renderTabla(filtrar(null,c),
-      "DESCRIPCION (ITEM)", "CANTIDAD (ITEM)", "tab4");
+    renderSimple(filtrar(null,c),
+      "DESCRIPCION (ITEM)", "CANTIDAD (ITEM)", "tabla4");
   }
 
   function filtrar(d,c) {
     return data.filter(r =>
-      (!d || r["DISTRITO"] === d) &&
-      (!c || r["DIRECCION (CLIENTE)"] === c)
+      (!d || r["DISTRITO"]===d) &&
+      (!c || r["DIRECCION (CLIENTE)"]===c)
     );
   }
 
-  function renderTabla(rows, g, v, id) {
+  function renderSimple(rows, g, v, id) {
     const m = {};
     rows.forEach(r => {
-      if (!r[g]) return;
-      m[r[g]] = (m[r[g]] || 0) + Number(r[v] || 0);
+      if(!r[g]) return;
+      m[r[g]] = (m[r[g]]||0)+Number(r[v]||0);
     });
     let h = `<table><tr><th>${g}</th><th>${v}</th></tr>`;
     Object.entries(m).sort((a,b)=>b[1]-a[1])
@@ -144,11 +148,11 @@
     document.getElementById(id).innerHTML = h + "</table>";
   }
 
-  function renderTablaMulti(rows, g, v, id) {
+  function renderMultiple(rows, g, v, id) {
     const m = {};
     rows.forEach(r => {
       const k = g.map(x=>r[x]).join(" | ");
-      m[k] = (m[k] || 0) + Number(r[v] || 0);
+      m[k] = (m[k]||0)+Number(r[v]||0);
     });
     let h = `<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
     Object.entries(m).sort((a,b)=>b[1]-a[1])
