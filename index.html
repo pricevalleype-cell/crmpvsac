@@ -7,14 +7,14 @@
   <style>
     body { font-family: Arial, sans-serif; margin:20px; background:#f4f6f8; }
     h1 { margin-bottom:10px; }
+    .status { font-weight:bold; margin:10px 0; }
     .filters, .tabs { margin:15px 0; }
     select, input, button { padding:6px; margin-right:8px; }
     button { cursor:pointer; }
-    table { border-collapse:collapse; width:100%; background:white; margin-top:10px; }
+    table { border-collapse:collapse; width:100%; background:#fff; margin-top:10px; }
     th, td { border:1px solid #ccc; padding:6px; text-align:left; }
     th { background:#eee; }
     .hidden { display:none; }
-    .status { font-weight:bold; margin-top:10px; }
   </style>
 </head>
 
@@ -46,12 +46,13 @@
 <div id="tab4" class="hidden"></div>
 
 <script type="module">
-  import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
+  import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
   let data = [];
 
-  const normalize = txt =>
-    txt.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  // Normalizar encabezados (quita tildes)
+  const norm = t =>
+    t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 
   document.getElementById("fileInput").addEventListener("change", e => {
     const file = e.target.files[0];
@@ -65,9 +66,10 @@
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { defval:"" });
 
+      // Normalizar columnas
       data = rows.map(r => {
         const o = {};
-        Object.keys(r).forEach(k => o[normalize(k)] = r[k]);
+        Object.keys(r).forEach(k => o[norm(k)] = r[k]);
         return o;
       });
 
@@ -82,17 +84,17 @@
 
   function cargarFiltros() {
     llenar("filtroDistrito",
-      [...new Set(data.map(d=>d["DISTRITO"]).filter(Boolean))]
+      [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]
     );
     llenar("filtroDireccion",
-      [...new Set(data.map(d=>d["DIRECCION (CLIENTE)"]).filter(Boolean))]
+      [...new Set(data.map(d => d["DIRECCION (CLIENTE)"]).filter(Boolean))]
     );
   }
 
   function llenar(id, vals) {
     const s = document.getElementById(id);
     s.innerHTML = "<option value=''>Todos</option>";
-    vals.forEach(v=>s.innerHTML+=`<option>${v}</option>`);
+    vals.forEach(v => s.innerHTML += `<option>${v}</option>`);
     s.onchange = renderAll;
   }
 
@@ -111,7 +113,7 @@
       "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab1");
 
     renderTablaMulti(filtrar(d,null),
-      ["DIRECCION (CLIENTE)","NOMBRE (CLIENTE)"],
+      ["DIRECCION (CLIENTE)", "NOMBRE (CLIENTE)"],
       "TOTAL (ITEM)", "tab2");
 
     renderTabla(filtrar(null,c),
@@ -123,33 +125,37 @@
 
   function filtrar(d,c) {
     return data.filter(r =>
-      (!d || r["DISTRITO"]===d) &&
-      (!c || r["DIRECCION (CLIENTE)"]===c)
+      (!d || r["DISTRITO"] === d) &&
+      (!c || r["DIRECCION (CLIENTE)"] === c)
     );
   }
 
   function renderTabla(rows, g, v, id) {
-    const m={};
-    rows.forEach(r=>{
-      if(!r[g])return;
-      m[r[g]]=(m[r[g]]||0)+Number(r[v]||0);
+    const m = {};
+    rows.forEach(r => {
+      if (!r[g]) return;
+      m[r[g]] = (m[r[g]] || 0) + Number(r[v] || 0);
     });
-    let h=`<table><tr><th>${g}</th><th>${v}</th></tr>`;
+    let h = `<table><tr><th>${g}</th><th>${v}</th></tr>`;
     Object.entries(m).sort((a,b)=>b[1]-a[1])
-      .forEach(([k,val])=>h+=`<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`);
-    document.getElementById(id).innerHTML=h+"</table>";
+      .forEach(([k,val]) =>
+        h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
+      );
+    document.getElementById(id).innerHTML = h + "</table>";
   }
 
   function renderTablaMulti(rows, g, v, id) {
-    const m={};
-    rows.forEach(r=>{
-      const k=g.map(x=>r[x]).join(" | ");
-      m[k]=(m[k]||0)+Number(r[v]||0);
+    const m = {};
+    rows.forEach(r => {
+      const k = g.map(x=>r[x]).join(" | ");
+      m[k] = (m[k] || 0) + Number(r[v] || 0);
     });
-    let h=`<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
+    let h = `<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
     Object.entries(m).sort((a,b)=>b[1]-a[1])
-      .forEach(([k,val])=>h+=`<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`);
-    document.getElementById(id).innerHTML=h+"</table>";
+      .forEach(([k,val]) =>
+        h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
+      );
+    document.getElementById(id).innerHTML = h + "</table>";
   }
 </script>
 
