@@ -29,3 +29,32 @@
     const output = document.getElementById("output");
     if (!file) return;
 
+    status.textContent = "⏳ Leyendo archivo...";
+    output.textContent = "";
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = new Uint8Array(reader.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        status.innerHTML = `<span class="ok">✅ Archivo leído correctamente</span>`;
+        output.textContent =
+          "Hoja: " + sheetName + "\n" +
+          "Filas leídas: " + rows.length + "\n\n" +
+          "Primera fila:\n" +
+          JSON.stringify(rows[0], null, 2);
+      } catch (err) {
+        status.innerHTML = `<span class="error">❌ Error leyendo el archivo</span>`;
+        output.textContent = err.message;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  });
+</script>
+
+</body>
+</html>
