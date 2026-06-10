@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Ventas 3 Meses</title>
-
   <style>
     body { font-family: Arial, sans-serif; margin:20px; background:#f4f6f8; }
     h1 { margin-bottom:10px; }
@@ -14,15 +13,16 @@
     th, td { border:1px solid #ccc; padding:6px; text-align:left; }
     th { background:#eee; }
     .status { font-weight:bold; margin:10px 0; }
+    #debug { background:#fff3cd; padding:10px; border-radius:6px; margin-bottom:15px; font-size:12px; display:none; }
   </style>
 </head>
-
 <body>
 
 <h1>📊 Dashboard Ventas 3 Meses</h1>
 
 <input type="file" id="fileInput" accept=".xlsx,.xls">
 <div id="status" class="status"></div>
+<div id="debug"></div>
 
 <!-- TABLA 1 -->
 <div class="box">
@@ -60,27 +60,60 @@
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 let data = [];
-const norm = t => t.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+let colMap = {}; // mapeo: clave normalizada -> nombre real en el archivo
+
+const norm = t => String(t).toUpperCase().trim()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\s+/g, " ");
+
+// Columnas que necesitamos (normalizadas)
+const COLS = {
+  DISTRITO:           "DISTRITO",
+  DESCRIPCION_ITEM:   "DESCRIPCION (ITEM)",
+  TOTAL_ITEM:         "TOTAL (ITEM)",
+  CANTIDAD_ITEM:      "CANTIDAD (ITEM)",
+  DIRECCION_CLIENTE:  "DIRECCION (CLIENTE)",
+  NOMBRE_CLIENTE:     "NOMBRE (CLIENTE)"
+};
 
 document.getElementById("fileInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
-  status.textContent = "⏳ Procesando archivo...";
+  document.getElementById("status").textContent = "⏳ Procesando archivo...";
 
   const reader = new FileReader();
   reader.onload = () => {
-    const wb = XLSX.read(new Uint8Array(reader.result), { type:"array" });
+    const wb = XLSX.read(new Uint8Array(reader.result), { type: "array" });
     const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, { defval:"" });
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
 
+    if (!rows.length) {
+      document.getElementById("status").textContent = "❌ El archivo no tiene datos.";
+      return;
+    }
+
+    // Detectar columnas reales del archivo y mapearlas
+    const realKeys = Object.keys(rows[0]);
+    colMap = {};
+    realKeys.forEach(k => { colMap[norm(k)] = k; });
+
+    // Mostrar debug con columnas detectadas
+    const debugEl = document.getElementById("debug");
+    debugEl.style.display = "block";
+    debugEl.innerHTML = `<strong>Columnas detectadas:</strong><br>${realKeys.join(" | ")}`;
+
+    // Normalizar datos usando los nombres reales detectados
     data = rows.map(r => {
       const o = {};
-      Object.keys(r).forEach(k => o[norm(k)] = r[k]);
+      Object.entries(COLS).forEach(([alias, expected]) => {
+        const realKey = colMap[norm(expected)];
+        o[alias] = realKey ? r[realKey] : "";
+      });
       return o;
     });
 
-    status.textContent = `✅ Archivo cargado (${data.length} filas)`;
+    document.getElementById("status").textContent = `✅ Archivo cargado (${data.length} filas)`;
     cargarFiltros();
     recalcularTodo();
   };
@@ -88,49 +121,57 @@ document.getElementById("fileInput").addEventListener("change", e => {
 });
 
 function cargarFiltros() {
-  llenar("filtroDistrito1", [...new Set(data.map(d=>d["DISTRITO"]).filter(Boolean))]);
-  llenar("filtroDistrito2", [...new Set(data.map(d=>d["DISTRITO"]).filter(Boolean))]);
-  llenar("filtroCliente3", [...new Set(data.map(d=>d["DIRECCION (CLIENTE)"]).filter(Boolean))]);
-  llenar("filtroCliente4", [...new Set(data.map(d=>d["DIRECCION (CLIENTE)"]).filter(Boolean))]);
+  llenar("filtroDistrito1", [...new Set(data.map(d => d.DISTRITO).filter(Boolean))].sort());
+  llenar("filtroDistrito2", [...new Set(data.map(d => d.DISTRITO).filter(Boolean))].sort());
+  llenar("filtroCliente3",  [...new Set(data.map(d => d.DIRECCION_CLIENTE).filter(Boolean))].sort());
+  llenar("filtroCliente4",  [...new Set(data.map(d => d.DIRECCION_CLIENTE).filter(Boolean))].sort());
 
-  filtroDistrito1.onchange = () => tabla1();
-  filtroDistrito2.onchange = () => tabla2();
-  filtroCliente3.onchange = () => tabla3();
-  filtroCliente4.onchange = () => tabla4();
+  document.getElementById("filtroDistrito1").onchange = tabla1;
+  document.getElementById("filtroDistrito2").onchange = tabla2;
+  document.getElementById("filtroCliente3").onchange  = tabla3;
+  document.getElementById("filtroCliente4").onchange  = tabla4;
 }
 
 function llenar(id, vals) {
   const s = document.getElementById(id);
   s.innerHTML = "<option value=''>Todos</option>";
-  vals.forEach(v => s.innerHTML += `<option>${v}</option>`);
+  vals.forEach(v => { s.innerHTML += `<option value="${v}">${v}</option>`; });
 }
 
 function tabla1() {
+  const f = document.getElementById("filtroDistrito1").value;
   renderSimple(
-    data.filter(r => !filtroDistrito1.value || r["DISTRITO"]===filtroDistrito1.value),
-    "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tabla1"
+    data.filter(r => !f || r.DISTRITO === f),
+    "DESCRIPCION_ITEM", "TOTAL_ITEM",
+    "Producto", "Total (S/)", "tabla1"
   );
 }
 
 function tabla2() {
+  const f = document.getElementById("filtroDistrito2").value;
   renderMulti(
-    data.filter(r => !filtroDistrito2.value || r["DISTRITO"]===filtroDistrito2.value),
-    ["DIRECCION (CLIENTE)","NOMBRE (CLIENTE)"],
-    "TOTAL (ITEM)", "tabla2"
+    data.filter(r => !f || r.DISTRITO === f),
+    ["DIRECCION_CLIENTE", "NOMBRE_CLIENTE"],
+    "TOTAL_ITEM",
+    "Cliente", "Total (S/)", "tabla2"
   );
 }
 
 function tabla3() {
+  const f = document.getElementById("filtroCliente3").value;
   renderSimple(
-    data.filter(r => !filtroCliente3.value || r["DIRECCION (CLIENTE)"]===filtroCliente3.value),
-    "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tabla3"
+    data.filter(r => !f || r.DIRECCION_CLIENTE === f),
+    "DESCRIPCION_ITEM", "TOTAL_ITEM",
+    "Producto", "Total (S/)", "tabla3"
   );
 }
 
 function tabla4() {
+  const f = document.getElementById("filtroCliente4").value;
   renderSimple(
-    data.filter(r => !filtroCliente4.value || r["DIRECCION (CLIENTE)"]===filtroCliente4.value),
-    "DESCRIPCION (ITEM)", "CANTIDAD (ITEM)", "tabla4"
+    data.filter(r => !f || r.DIRECCION_CLIENTE === f),
+    "DESCRIPCION_ITEM", "CANTIDAD_ITEM",
+    "Producto", "Cantidad", "tabla4"
   );
 }
 
@@ -138,28 +179,41 @@ function recalcularTodo() {
   tabla1(); tabla2(); tabla3(); tabla4();
 }
 
-function renderSimple(rows, g, v, id) {
+function renderSimple(rows, g, v, labelG, labelV, id) {
   const m = {};
   rows.forEach(r => {
-    if(!r[g]) return;
-    m[r[g]] = (m[r[g]]||0)+Number(r[v]||0);
+    const k = r[g];
+    if (!k) return;
+    m[k] = (m[k] || 0) + Number(r[v] || 0);
   });
-  let h = `<table><tr><th>${g}</th><th>${v}</th></tr>`;
-  Object.entries(m).sort((a,b)=>b[1]-a[1])
-    .forEach(([k,val]) => h+=`<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`);
-  document.getElementById(id).innerHTML = h+"</table>";
+  const entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+  let h = `<table><tr><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val]) => {
+    h += `<tr><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  });
+  document.getElementById(id).innerHTML = h + "</table>";
 }
 
-function renderMulti(rows, g, v, id) {
+function renderMulti(rows, g, v, labelG, labelV, id) {
   const m = {};
   rows.forEach(r => {
-    const k = g.map(x=>r[x]).join(" | ");
-    m[k]=(m[k]||0)+Number(r[v]||0);
+    const k = g.map(x => r[x] || "").join(" | ");
+    m[k] = (m[k] || 0) + Number(r[v] || 0);
   });
-  let h = `<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
-  Object.entries(m).sort((a,b)=>b[1]-a[1])
-    .forEach(([k,val]) => h+=`<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`);
-  document.getElementById(id).innerHTML = h+"</table>";
+  const entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+  let h = `<table><tr><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val]) => {
+    h += `<tr><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  });
+  document.getElementById(id).innerHTML = h + "</table>";
 }
 </script>
 
