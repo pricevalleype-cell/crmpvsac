@@ -1,233 +1,276 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Ventas 3 Meses</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-
-<style>
-/* ==== ESTILOS (SIN CAMBIOS FUNCIONALES) ==== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:#0f1117; --surface:#181c27; --surface2:#1e2335;
-  --border:#2a2f45; --accent:#4f8ef7; --accent2:#7c5cfc;
-  --green:#22c98e; --amber:#f5a623;
-  --text:#e8eaf2; --muted:#6b7394;
-  --gold:#f5c842; --silver:#a0aec0; --bronze:#c97d3a;
-  --radius:12px;
-  --font-disp:'Space Grotesk',sans-serif;
-  --font-body:'Inter',sans-serif;
-}
-
-body { background:var(--bg); color:var(--text); font-family:var(--font-body); }
-
-.topbar {
-  background:var(--surface); border-bottom:1px solid var(--border);
-  padding:14px 28px; display:flex; align-items:center; gap:16px;
-  position:sticky; top:0; z-index:10;
-}
-.topbar-title { font-family:var(--font-disp); font-size:18px; font-weight:700; flex:1; }
-.topbar-title span { color:var(--accent); }
-
-.upload-btn-inner {
-  background:var(--accent); color:#fff; padding:8px 16px;
-  border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
-}
-.upload-btn input { display:none; }
-
-.status-badge { font-size:12px; color:var(--muted); }
-.status-badge.ok { color:var(--green); }
-.status-badge.loading { color:var(--amber); }
-
-.nav {
-  background:var(--surface); border-bottom:1px solid var(--border);
-  display:flex; gap:4px; padding:0 28px;
-}
-.nav-tab {
-  padding:12px 18px; border:none; background:none;
-  color:var(--muted); cursor:pointer;
-}
-.nav-tab.active { color:var(--accent); border-bottom:2px solid var(--accent); }
-
-.main { padding:28px; max-width:1200px; margin:auto; }
-.panel { display:none; }
-.panel.active { display:block; }
-
-.card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:12px; padding:20px;
-}
-
-table { width:100%; border-collapse:collapse; font-size:13px; }
-th, td { padding:10px 12px; border-bottom:1px solid var(--border); }
-th { font-size:11px; text-transform:uppercase; color:var(--muted); }
-.num { text-align:right; }
-
-.empty { text-align:center; padding:40px; color:var(--muted); }
-.rank-num { font-weight:700; text-align:center; width:32px; }
-.rank-1{color:var(--gold);} .rank-2{color:var(--silver);}
-.rank-3{color:var(--bronze);} .rank-n{color:var(--muted);}
-</style>
+  <meta charset="UTF-8">
+  <title>Dashboard Ventas 3 Meses</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:20px; background:#f4f6f8; }
+    h1 { margin-bottom:10px; }
+    h2 { margin-top:0; }
+    .box { background:#fff; padding:15px; margin-bottom:25px; border-radius:6px; }
+    select, input { padding:6px; margin:10px 0; }
+    table { border-collapse:collapse; width:100%; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:left; }
+    th { background:#eee; }
+    .status { font-weight:bold; margin:10px 0; }
+    #debug { background:#fff3cd; padding:10px; border-radius:6px; margin-bottom:15px; font-size:12px; display:none; }
+    .placeholder { color:#999; font-style:italic; margin-top:10px; }
+    .fecha-grupo td { background:#d9e1f2; font-weight:bold; }
+    .fecha-total td { background:#e2efda; font-weight:bold; }
+    .item-row td:first-child { padding-left:30px; color:#555; }
+  </style>
 </head>
-
 <body>
 
-<header class="topbar">
-  <div class="topbar-title">📊 <span>Ventas</span> 3M</div>
-  <div id="status" class="status-badge">Sin archivo cargado</div>
-  <label class="upload-btn">
-    <input type="file" id="fileInput" accept=".xlsx,.xls">
-    <div class="upload-btn-inner">⬆ Cargar Excel</div>
-  </label>
-</header>
+<h1>📊 Dashboard Ventas 3 Meses</h1>
 
-<nav class="nav">
-  <button class="nav-tab active" data-tab="t0">🏆 Resumen</button>
-  <button class="nav-tab" data-tab="t1">📦 Producto × Distrito</button>
-  <button class="nav-tab" data-tab="t2">👤 Cliente × Distrito</button>
-</nav>
+<input type="file" id="fileInput" accept=".xlsx,.xls">
+<div id="status" class="status"></div>
+<div id="debug"></div>
 
-<main class="main">
+<!-- TABLA 1 -->
+<div class="box">
+  <h2>Tabla 1 – Top 10 Producto x Distrito</h2>
+  <label>Distrito:</label>
+  <select id="filtroDistrito1"><option value="">-- Selecciona un distrito --</option></select>
+  <div id="tabla1"><p class="placeholder">Selecciona un distrito para ver los datos.</p></div>
+</div>
 
-<section class="panel active" id="t0">
-  <div id="p0-content" class="empty">Carga el archivo Excel</div>
-</section>
+<!-- TABLA 2 -->
+<div class="box">
+  <h2>Tabla 2 – Top 10 Cliente x Distrito</h2>
+  <label>Distrito:</label>
+  <select id="filtroDistrito2"><option value="">-- Selecciona un distrito --</option></select>
+  <div id="tabla2"><p class="placeholder">Selecciona un distrito para ver los datos.</p></div>
+</div>
 
-<section class="panel" id="t1">
-  <select id="filtroDistrito1"></select>
-  <div class="card" id="tabla1"></div>
-</section>
+<!-- TABLA 3 -->
+<div class="box">
+  <h2>Tabla 3 – Top 10 Producto x Cliente (Monto)</h2>
+  <label>Dirección Cliente:</label>
+  <select id="filtroCliente3"><option value="">-- Selecciona un cliente --</option></select>
+  <div id="tabla3"><p class="placeholder">Selecciona un cliente para ver los datos.</p></div>
+</div>
 
-<section class="panel" id="t2">
-  <select id="filtroDistrito2"></select>
-  <div class="card" id="tabla2"></div>
-</section>
-
-</main>
+<!-- TABLA 4 -->
+<div class="box">
+  <h2>Tabla 4 – Ventas x Cliente (Detalle por Fecha)</h2>
+  <label>Dirección Cliente:</label>
+  <select id="filtroCliente4"><option value="">-- Selecciona un cliente --</option></select>
+  <div id="tabla4"><p class="placeholder">Selecciona un cliente para ver los datos.</p></div>
+</div>
 
 <script type="module">
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 let data = [];
+let colMap = {};
+
+const norm = t => String(t).toUpperCase().trim()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/\s+/g, " ");
 
 const COLS = {
+  DISTRITO:          "DISTRITO",
+  DESCRIPCION_ITEM:  "DESCRIPCION (ITEM)",
+  TOTAL_ITEM:        "TOTAL (ITEM)",
+  CANTIDAD_ITEM:     "CANTIDAD (ITEM)",
   DIRECCION_CLIENTE: "DIRECCION (CLIENTE)",
-  NOMBRE_CLIENTE: "NOMBRE (CLIENTE)",
-  DESCRIPCION_ITEM: "DESCRIPCION (ITEM)",
-  TOTAL_ITEM: "TOTAL (ITEM)"
+  NOMBRE_CLIENTE:    "NOMBRE (CLIENTE)",
+  FECHA:             "FECHA"
 };
 
-/* ========= FUNCIÓN CLAVE: EXTRAER DISTRITO ========= */
-function extraerDistrito(direccion) {
-  if (!direccion) return "";
-
-  const txt = String(direccion).toUpperCase().trim();
-  const sinLima = txt.replace(/\s+LIMA\s*-\s*LIMA\s*$/i, "").trim();
-
-  const distritos = [
-    "ANCON","ATE","BARRANCO","BREÑA","CARABAYLLO","CHACLACAYO",
-    "CHORRILLOS","CIENEGUILLA","COMAS","EL AGUSTINO",
-    "INDEPENDENCIA","JESUS MARIA","LA MOLINA","LA VICTORIA",
-    "CERCADO DE LIMA","LINCE","LOS OLIVOS","LURIGANCHO",
-    "LURIN","MAGDALENA DEL MAR","MIRAFLORES","PACHACAMAC",
-    "PUCUSANA","PUEBLO LIBRE","PUENTE PIEDRA","RIMAC",
-    "SAN BORJA","SAN ISIDRO","SAN JUAN DE LURIGANCHO",
-    "SAN JUAN DE MIRAFLORES","SAN MARTIN DE PORRES",
-    "SAN MIGUEL","SANTA ANITA","SANTIAGO DE SURCO",
-    "SURQUILLO","VILLA EL SALVADOR","VILLA MARIA DEL TRIUNFO"
-  ];
-
-  for (const d of distritos) {
-    if (sinLima.endsWith(" " + d) || sinLima === d) return d;
-  }
-  return "";
-}
-
-/* ========= EVENTOS ========= */
-document.querySelectorAll(".nav-tab").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll(".nav-tab").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-    b.classList.add("active");
-    document.getElementById(b.dataset.tab).classList.add("active");
-  }
-});
-
-document.getElementById("fileInput").onchange = e => {
+document.getElementById("fileInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
+  document.getElementById("status").textContent = "⏳ Procesando archivo...";
 
   const reader = new FileReader();
   reader.onload = () => {
-    const wb = XLSX.read(new Uint8Array(reader.result), { type:"array" });
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const wb = XLSX.read(new Uint8Array(reader.result), { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
 
-    data = rows.map(r=>{
+    if (!rows.length) {
+      document.getElementById("status").textContent = "❌ El archivo no tiene datos.";
+      return;
+    }
+
+    const realKeys = Object.keys(rows[0]);
+    colMap = {};
+    realKeys.forEach(k => { colMap[norm(k)] = k; });
+
+    const debugEl = document.getElementById("debug");
+    debugEl.style.display = "block";
+    debugEl.innerHTML = `<strong>Columnas detectadas:</strong><br>${realKeys.join(" | ")}`;
+
+    data = rows.map(r => {
       const o = {};
-      Object.entries(COLS).forEach(([k,v])=>o[k]=r[v]||"");
-      o.DISTRITO = extraerDistrito(o.DIRECCION_CLIENTE);
+      Object.entries(COLS).forEach(([alias, expected]) => {
+        const realKey = colMap[norm(expected)];
+        o[alias] = realKey ? r[realKey] : "";
+      });
       return o;
     });
 
-    document.getElementById("status").textContent = `✅ ${data.length} filas`;
+    document.getElementById("status").textContent = `✅ Archivo cargado (${data.length} filas)`;
     cargarFiltros();
-    resumen();
+    // No llamar recalcularTodo() — esperar selección del usuario
   };
   reader.readAsArrayBuffer(file);
-};
+});
 
 function cargarFiltros() {
-  const dists = [...new Set(data.map(d=>d.DISTRITO).filter(Boolean))].sort();
-  ["filtroDistrito1","filtroDistrito2"].forEach(id=>{
-    const s=document.getElementById(id);
-    s.innerHTML='<option value="">Distrito</option>';
-    dists.forEach(d=>s.innerHTML+=`<option>${d}</option>`);
-  });
-  filtroDistrito1.onchange=tabla1;
-  filtroDistrito2.onchange=tabla2;
+  llenar("filtroDistrito1", [...new Set(data.map(d => d.DISTRITO).filter(Boolean))].sort());
+  llenar("filtroDistrito2", [...new Set(data.map(d => d.DISTRITO).filter(Boolean))].sort());
+  llenar("filtroCliente3",  [...new Set(data.map(d => d.DIRECCION_CLIENTE).filter(Boolean))].sort());
+  llenar("filtroCliente4",  [...new Set(data.map(d => d.DIRECCION_CLIENTE).filter(Boolean))].sort());
+
+  document.getElementById("filtroDistrito1").onchange = tabla1;
+  document.getElementById("filtroDistrito2").onchange = tabla2;
+  document.getElementById("filtroCliente3").onchange  = tabla3;
+  document.getElementById("filtroCliente4").onchange  = tabla4;
 }
 
-/* ========= TABLAS ========= */
-function resumen(){
-  const m={};
-  data.forEach(r=>{
-    m[r.DESCRIPCION_ITEM]=(m[r.DESCRIPCION_ITEM]||0)+Number(r.TOTAL_ITEM||0);
-  });
-  document.getElementById("p0-content").innerHTML = build(m,"Producto");
+function llenar(id, vals) {
+  const s = document.getElementById(id);
+  // Mantener opción vacía inicial
+  const placeholder = s.options[0].text;
+  s.innerHTML = `<option value="">${placeholder}</option>`;
+  vals.forEach(v => { s.innerHTML += `<option value="${v}">${v}</option>`; });
 }
 
-function tabla1(){
-  const d=filtroDistrito1.value;
-  const f=data.filter(r=>r.DISTRITO===d);
-  const m={};
-  f.forEach(r=>m[r.DESCRIPCION_ITEM]=(m[r.DESCRIPCION_ITEM]||0)+Number(r.TOTAL_ITEM||0));
-  tabla1.innerHTML = build(m,"Producto");
+const PLACEHOLDER = id => `<p class="placeholder">Selecciona una opción para ver los datos.</p>`;
+
+function tabla1() {
+  const f = document.getElementById("filtroDistrito1").value;
+  if (!f) { document.getElementById("tabla1").innerHTML = PLACEHOLDER(); return; }
+  renderSimple(
+    data.filter(r => r.DISTRITO === f),
+    "DESCRIPCION_ITEM", "TOTAL_ITEM",
+    "Producto", "Total (S/)", "tabla1", 10
+  );
 }
 
-function tabla2(){
-  const d=filtroDistrito2.value;
-  const f=data.filter(r=>r.DISTRITO===d);
-  const m={};
-  f.forEach(r=>{
-    const k=r.NOMBRE_CLIENTE;
-    m[k]=(m[k]||0)+Number(r.TOTAL_ITEM||0);
-  });
-  tabla2.innerHTML = build(m,"Cliente");
+function tabla2() {
+  const f = document.getElementById("filtroDistrito2").value;
+  if (!f) { document.getElementById("tabla2").innerHTML = PLACEHOLDER(); return; }
+  renderMulti(
+    data.filter(r => r.DISTRITO === f),
+    ["DIRECCION_CLIENTE", "NOMBRE_CLIENTE"],
+    "TOTAL_ITEM",
+    "Cliente", "Total (S/)", "tabla2", 10
+  );
 }
 
-function build(map,label){
-  const e=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  if(!e.length) return '<div class="empty">Sin datos</div>';
-  let h='<table><tr><th>Pos</th><th>'+label+'</th><th class="num">Total</th></tr>';
-  e.forEach(([k,v],i)=>{
-    h+=`<tr><td class="rank-num">${i+1}</td><td>${k}</td><td class="num">${v.toFixed(2)}</td></tr>`;
+function tabla3() {
+  const f = document.getElementById("filtroCliente3").value;
+  if (!f) { document.getElementById("tabla3").innerHTML = PLACEHOLDER(); return; }
+  renderSimple(
+    data.filter(r => r.DIRECCION_CLIENTE === f),
+    "DESCRIPCION_ITEM", "TOTAL_ITEM",
+    "Producto", "Total (S/)", "tabla3", 10
+  );
+}
+
+function tabla4() {
+  const f = document.getElementById("filtroCliente4").value;
+  if (!f) { document.getElementById("tabla4").innerHTML = PLACEHOLDER(); return; }
+
+  const filtered = data.filter(r => r.DIRECCION_CLIENTE === f);
+  if (!filtered.length) {
+    document.getElementById("tabla4").innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+
+  const formatFecha = val => {
+    if (!val) return "";
+    if (typeof val === "number") {
+      const date = XLSX.SSF.parse_date_code(val);
+      if (date) {
+        const d = String(date.d).padStart(2,"0");
+        const m = String(date.m).padStart(2,"0");
+        const H = String(date.H).padStart(2,"0");
+        const M = String(date.M).padStart(2,"0");
+        return `${d}/${m}/${date.y} ${H}:${M}`;
+      }
+    }
+    return String(val).split(".")[0];
+  };
+
+  const grupos = {};
+  filtered.forEach(r => {
+    const fecha = formatFecha(r.FECHA) || "Sin fecha";
+    if (!grupos[fecha]) grupos[fecha] = [];
+    grupos[fecha].push(r);
   });
-  return h+'</table>';
+
+  const fechasOrdenadas = Object.keys(grupos).sort((a, b) => b.localeCompare(a));
+
+  let h = `<table>
+    <tr><th>Fecha</th><th>Descripción (Item)</th><th style="text-align:right">Cantidad</th></tr>`;
+
+  fechasOrdenadas.forEach(fecha => {
+    const items = grupos[fecha];
+    const totalFecha = items.reduce((s, r) => s + Number(r.CANTIDAD_ITEM || 0), 0);
+
+    h += `<tr class="fecha-grupo"><td>${fecha}</td><td></td><td></td></tr>`;
+    items.forEach(r => {
+      h += `<tr class="item-row">
+        <td></td>
+        <td>${r.DESCRIPCION_ITEM || ""}</td>
+        <td style="text-align:right">${Number(r.CANTIDAD_ITEM || 0).toLocaleString()}</td>
+      </tr>`;
+    });
+    h += `<tr class="fecha-total">
+      <td colspan="2">${fecha} Total</td>
+      <td style="text-align:right">${totalFecha.toLocaleString()}</td>
+    </tr>`;
+  });
+
+  h += "</table>";
+  document.getElementById("tabla4").innerHTML = h;
+}
+
+function renderSimple(rows, g, v, labelG, labelV, id, top = null) {
+  const m = {};
+  rows.forEach(r => {
+    const k = r[g];
+    if (!k) return;
+    m[k] = (m[k] || 0) + Number(r[v] || 0);
+  });
+  let entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (top) entries = entries.slice(0, top);
+  if (!entries.length) {
+    document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+  let h = `<table><tr><th>#</th><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val], i) => {
+    h += `<tr><td>${i+1}</td><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  });
+  document.getElementById(id).innerHTML = h + "</table>";
+}
+
+function renderMulti(rows, g, v, labelG, labelV, id, top = null) {
+  const m = {};
+  rows.forEach(r => {
+    const k = g.map(x => r[x] || "").join(" | ");
+    m[k] = (m[k] || 0) + Number(r[v] || 0);
+  });
+  let entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (top) entries = entries.slice(0, top);
+  if (!entries.length) {
+    document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+  let h = `<table><tr><th>#</th><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val], i) => {
+    h += `<tr><td>${i+1}</td><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  });
+  document.getElementById(id).innerHTML = h + "</table>";
 }
 </script>
+
 </body>
 </html>
-``
