@@ -1,290 +1,80 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Ventas 3 Meses</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ventas 3 Meses</title>
 
-    :root {
-      --bg:        #0f1117;
-      --surface:   #181c27;
-      --surface2:  #1e2335;
-      --border:    #2a2f45;
-      --accent:    #4f8ef7;
-      --accent2:   #7c5cfc;
-      --green:     #22c98e;
-      --amber:     #f5a623;
-      --text:      #e8eaf2;
-      --muted:     #6b7394;
-      --gold:      #f5c842;
-      --silver:    #a0aec0;
-      --bronze:    #c97d3a;
-      --radius:    12px;
-      --font-disp: 'Space Grotesk', sans-serif;
-      --font-body: 'Inter', sans-serif;
-    }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-    }
+<style>
+/* ==== ESTILOS (SIN CAMBIOS FUNCIONALES) ==== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── TOPBAR ── */
-    .topbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 28px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .topbar-title {
-      font-family: var(--font-disp);
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      flex: 1;
-    }
-    .topbar-title span { color: var(--accent); }
+:root {
+  --bg:#0f1117; --surface:#181c27; --surface2:#1e2335;
+  --border:#2a2f45; --accent:#4f8ef7; --accent2:#7c5cfc;
+  --green:#22c98e; --amber:#f5a623;
+  --text:#e8eaf2; --muted:#6b7394;
+  --gold:#f5c842; --silver:#a0aec0; --bronze:#c97d3a;
+  --radius:12px;
+  --font-disp:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+}
 
-    .upload-btn {
-      position: relative;
-      cursor: pointer;
-    }
-    .upload-btn input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
-    }
-    .upload-btn-inner {
-      background: var(--accent);
-      color: #fff;
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      transition: background .2s;
-    }
-    .upload-btn:hover .upload-btn-inner { background: #3a7ae0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font-body); }
 
-    .status-badge {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .status-badge.ok { color: var(--green); }
-    .status-badge.loading { color: var(--amber); }
+.topbar {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:14px 28px; display:flex; align-items:center; gap:16px;
+  position:sticky; top:0; z-index:10;
+}
+.topbar-title { font-family:var(--font-disp); font-size:18px; font-weight:700; flex:1; }
+.topbar-title span { color:var(--accent); }
 
-    /* ── NAV TABS ── */
-    .nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      display: flex;
-      gap: 4px;
-      overflow-x: auto;
-    }
-    .nav-tab {
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      padding: 12px 18px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap;
-      transition: color .15s, border-color .15s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .nav-tab:hover { color: var(--text); }
-    .nav-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
+.upload-btn-inner {
+  background:var(--accent); color:#fff; padding:8px 16px;
+  border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+}
+.upload-btn input { display:none; }
 
-    /* ── MAIN ── */
-    .main { padding: 28px; max-width: 1200px; margin: 0 auto; }
+.status-badge { font-size:12px; color:var(--muted); }
+.status-badge.ok { color:var(--green); }
+.status-badge.loading { color:var(--amber); }
 
-    /* ── PANELS ── */
-    .panel { display: none; animation: fadeIn .25s ease; }
-    .panel.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.nav {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  display:flex; gap:4px; padding:0 28px;
+}
+.nav-tab {
+  padding:12px 18px; border:none; background:none;
+  color:var(--muted); cursor:pointer;
+}
+.nav-tab.active { color:var(--accent); border-bottom:2px solid var(--accent); }
 
-    .panel-header {
-      margin-bottom: 24px;
-    }
-    .panel-header h2 {
-      font-family: var(--font-disp);
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-    .panel-header p {
-      font-size: 13px;
-      color: var(--muted);
-    }
+.main { padding:28px; max-width:1200px; margin:auto; }
+.panel { display:none; }
+.panel.active { display:block; }
 
-    /* ── GRID ── */
-    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    @media(max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:20px;
+}
 
-    /* ── CARD ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-    }
-    .card-title {
-      font-family: var(--font-disp);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-title .badge {
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--accent2);
-      color: #fff;
-      padding: 2px 8px;
-      border-radius: 99px;
-    }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th, td { padding:10px 12px; border-bottom:1px solid var(--border); }
+th { font-size:11px; text-transform:uppercase; color:var(--muted); }
+.num { text-align:right; }
 
-    /* ── FILTER ROW ── */
-    .filter-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .filter-row label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-    }
-    .filter-row select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: var(--font-body);
-      font-size: 13px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      outline: none;
-      cursor: pointer;
-      min-width: 260px;
-      transition: border-color .15s;
-    }
-    .filter-row select:focus { border-color: var(--accent); }
-
-    /* ── TABLE ── */
-    .tbl-wrap { overflow-x: auto; }
-    table { border-collapse: collapse; width: 100%; font-size: 13px; }
-    thead tr { border-bottom: 1px solid var(--border); }
-    th {
-      text-align: left;
-      padding: 10px 12px;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
-    }
-    td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: var(--surface2); }
-
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .rank-num {
-      font-weight: 700;
-      width: 32px;
-      text-align: center;
-    }
-
-    .rank-1 { color: var(--gold); }
-    .rank-2 { color: var(--silver); }
-    .rank-3 { color: var(--bronze); }
-    .rank-n { color: var(--muted); font-size: 12px; }
-
-    /* Tabla 4 rows */
-    .row-fecha td {
-      background: var(--surface2);
-      color: var(--accent);
-      font-weight: 600;
-      font-size: 12px;
-      padding: 8px 12px;
-    }
-    .row-item td { padding-left: 32px; color: var(--muted); }
-    .row-item td:last-child { color: var(--text); }
-    .row-total td {
-      color: var(--green);
-      font-weight: 600;
-      font-size: 12px;
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── EMPTY / PLACEHOLDER ── */
-    .empty {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .empty .icon { font-size: 32px; margin-bottom: 8px; }
-
-    /* ── DEBUG ── */
-    #debug {
-      background: #2a2410;
-      border: 1px solid #5a4a10;
-      color: #f5c842;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 11px;
-      margin: 16px 28px 0;
-      display: none;
-    }
-
-    /* ── WELCOME SCREEN ── */
-    .welcome {
-      text-align: center;
-      padding: 80px 20px;
-    }
-    .welcome h3 {
-      font-family: var(--font-disp);
-      font-size: 24px;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-    .welcome p { color: var(--muted); font-size: 14px; }
-  </style>
+.empty { text-align:center; padding:40px; color:var(--muted); }
+.rank-num { font-weight:700; text-align:center; width:32px; }
+.rank-1{color:var(--gold);} .rank-2{color:var(--silver);}
+.rank-3{color:var(--bronze);} .rank-n{color:var(--muted);}
+</style>
 </head>
+
 <body>
 
-<!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-title">📊 <span>Ventas</span> 3M</div>
   <div id="status" class="status-badge">Sin archivo cargado</div>
@@ -294,94 +84,27 @@
   </label>
 </header>
 
-<!-- NAV TABS -->
 <nav class="nav">
   <button class="nav-tab active" data-tab="t0">🏆 Resumen</button>
   <button class="nav-tab" data-tab="t1">📦 Producto × Distrito</button>
   <button class="nav-tab" data-tab="t2">👤 Cliente × Distrito</button>
-  <button class="nav-tab" data-tab="t3">🛒 Producto × Cliente</button>
-  <button class="nav-tab" data-tab="t4">📅 Detalle por Fecha</button>
 </nav>
 
-<div id="debug"></div>
-
-<!-- MAIN -->
 <main class="main">
 
-  <!-- PANEL 0 -->
-  <section class="panel active" id="t0">
-    <div class="panel-header">
-      <h2>🏆 Resumen General</h2>
-      <p>Top 10 global — sin filtros, sobre el total del período.</p>
-    </div>
-    <div id="p0-content">
-      <div class="welcome">
-        <div class="icon">📂</div>
-        <h3>Carga tu archivo Excel</h3>
-        <p>Usa el botón "Cargar Excel" para comenzar.</p>
-      </div>
-    </div>
-  </section>
+<section class="panel active" id="t0">
+  <div id="p0-content" class="empty">Carga el archivo Excel</div>
+</section>
 
-  <!-- PANEL 1 -->
-  <section class="panel" id="t1">
-    <div class="panel-header">
-      <h2>📦 Top 10 Productos por Distrito</h2>
-      <p>Monto total (S/) por producto en el distrito seleccionado.</p>
-    </div>
-    <div class="filter-row">
-      <label>Distrito</label>
-      <select id="filtroDistrito1"><option value="">— Selecciona un distrito —</option></select>
-    </div>
-    <div class="card"><div class="tbl-wrap" id="tabla1">
-      <div class="empty"><div class="icon">🗺</div>Selecciona un distrito para ver el ranking.</div>
-    </div></div>
-  </section>
+<section class="panel" id="t1">
+  <select id="filtroDistrito1"></select>
+  <div class="card" id="tabla1"></div>
+</section>
 
-  <!-- PANEL 2 -->
-  <section class="panel" id="t2">
-    <div class="panel-header">
-      <h2>👤 Top 10 Clientes por Distrito</h2>
-      <p>Monto total (S/) por cliente en el distrito seleccionado.</p>
-    </div>
-    <div class="filter-row">
-      <label>Distrito</label>
-      <select id="filtroDistrito2"><option value="">— Selecciona un distrito —</option></select>
-    </div>
-    <div class="card"><div class="tbl-wrap" id="tabla2">
-      <div class="empty"><div class="icon">🗺</div>Selecciona un distrito para ver el ranking.</div>
-    </div></div>
-  </section>
-
-  <!-- PANEL 3 -->
-  <section class="panel" id="t3">
-    <div class="panel-header">
-      <h2>🛒 Top 10 Productos por Cliente</h2>
-      <p>Monto total (S/) por producto para el cliente seleccionado.</p>
-    </div>
-    <div class="filter-row">
-      <label>Cliente</label>
-      <select id="filtroCliente3"><option value="">— Selecciona un cliente —</option></select>
-    </div>
-    <div class="card"><div class="tbl-wrap" id="tabla3">
-      <div class="empty"><div class="icon">👤</div>Selecciona un cliente para ver el ranking.</div>
-    </div></div>
-  </section>
-
-  <!-- PANEL 4 -->
-  <section class="panel" id="t4">
-    <div class="panel-header">
-      <h2>📅 Detalle de Ventas por Fecha</h2>
-      <p>Historial completo de pedidos del cliente seleccionado.</p>
-    </div>
-    <div class="filter-row">
-      <label>Cliente</label>
-      <select id="filtroCliente4"><option value="">— Selecciona un cliente —</option></select>
-    </div>
-    <div class="card"><div class="tbl-wrap" id="tabla4">
-      <div class="empty"><div class="icon">📅</div>Selecciona un cliente para ver su historial.</div>
-    </div></div>
-  </section>
+<section class="panel" id="t2">
+  <select id="filtroDistrito2"></select>
+  <div class="card" id="tabla2"></div>
+</section>
 
 </main>
 
@@ -389,227 +112,122 @@
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 let data = [];
-let colMap = {};
-
-const norm = t => String(t).toUpperCase().trim()
-  .normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ");
 
 const COLS = {
-  DISTRITO:          "DISTRITO",
-  DESCRIPCION_ITEM:  "DESCRIPCION (ITEM)",
-  TOTAL_ITEM:        "TOTAL (ITEM)",
-  CANTIDAD_ITEM:     "CANTIDAD (ITEM)",
   DIRECCION_CLIENTE: "DIRECCION (CLIENTE)",
-  NOMBRE_CLIENTE:    "NOMBRE (CLIENTE)",
-  FECHA:             "FECHA"
+  NOMBRE_CLIENTE: "NOMBRE (CLIENTE)",
+  DESCRIPCION_ITEM: "DESCRIPCION (ITEM)",
+  TOTAL_ITEM: "TOTAL (ITEM)"
 };
 
-const empty = (msg, icon="📭") =>
-  `<div class="empty"><div class="icon">${icon}</div>${msg}</div>`;
+/* ========= FUNCIÓN CLAVE: EXTRAER DISTRITO ========= */
+function extraerDistrito(direccion) {
+  if (!direccion) return "";
 
-// ── TAB SWITCHING ────────────────────────────────────────
-document.querySelectorAll(".nav-tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  });
+  const txt = String(direccion).toUpperCase().trim();
+  const sinLima = txt.replace(/\s+LIMA\s*-\s*LIMA\s*$/i, "").trim();
+
+  const distritos = [
+    "ANCON","ATE","BARRANCO","BREÑA","CARABAYLLO","CHACLACAYO",
+    "CHORRILLOS","CIENEGUILLA","COMAS","EL AGUSTINO",
+    "INDEPENDENCIA","JESUS MARIA","LA MOLINA","LA VICTORIA",
+    "CERCADO DE LIMA","LINCE","LOS OLIVOS","LURIGANCHO",
+    "LURIN","MAGDALENA DEL MAR","MIRAFLORES","PACHACAMAC",
+    "PUCUSANA","PUEBLO LIBRE","PUENTE PIEDRA","RIMAC",
+    "SAN BORJA","SAN ISIDRO","SAN JUAN DE LURIGANCHO",
+    "SAN JUAN DE MIRAFLORES","SAN MARTIN DE PORRES",
+    "SAN MIGUEL","SANTA ANITA","SANTIAGO DE SURCO",
+    "SURQUILLO","VILLA EL SALVADOR","VILLA MARIA DEL TRIUNFO"
+  ];
+
+  for (const d of distritos) {
+    if (sinLima.endsWith(" " + d) || sinLima === d) return d;
+  }
+  return "";
+}
+
+/* ========= EVENTOS ========= */
+document.querySelectorAll(".nav-tab").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".nav-tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+    b.classList.add("active");
+    document.getElementById(b.dataset.tab).classList.add("active");
+  }
 });
 
-// ── FILE LOAD ────────────────────────────────────────────
-document.getElementById("fileInput").addEventListener("change", e => {
+document.getElementById("fileInput").onchange = e => {
   const file = e.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById("status");
-  statusEl.className = "status-badge loading";
-  statusEl.textContent = "⏳ Procesando…";
 
   const reader = new FileReader();
   reader.onload = () => {
     const wb = XLSX.read(new Uint8Array(reader.result), { type:"array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, { defval:"" });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
 
-    if (!rows.length) {
-      statusEl.className = "status-badge";
-      statusEl.textContent = "❌ Archivo vacío";
-      return;
-    }
-
-    const realKeys = Object.keys(rows[0]);
-    colMap = {};
-    realKeys.forEach(k => { colMap[norm(k)] = k; });
-
-    const debugEl = document.getElementById("debug");
-    debugEl.style.display = "block";
-    debugEl.innerHTML = `<strong>Columnas:</strong> ${realKeys.join(" · ")}`;
-
-    data = rows.map(r => {
+    data = rows.map(r=>{
       const o = {};
-      Object.entries(COLS).forEach(([alias, expected]) => {
-        const rk = colMap[norm(expected)];
-        o[alias] = rk ? r[rk] : "";
-      });
+      Object.entries(COLS).forEach(([k,v])=>o[k]=r[v]||"");
+      o.DISTRITO = extraerDistrito(o.DIRECCION_CLIENTE);
       return o;
     });
 
-    statusEl.className = "status-badge ok";
-    statusEl.textContent = `✅ ${data.length.toLocaleString()} filas cargadas`;
-
+    document.getElementById("status").textContent = `✅ ${data.length} filas`;
     cargarFiltros();
-    tabla0();
+    resumen();
   };
   reader.readAsArrayBuffer(file);
-});
+};
 
-// ── FILTROS ──────────────────────────────────────────────
 function cargarFiltros() {
-  llenar("filtroDistrito1", [...new Set(data.map(d=>d.DISTRITO).filter(Boolean))].sort());
-  llenar("filtroDistrito2", [...new Set(data.map(d=>d.DISTRITO).filter(Boolean))].sort());
-  llenar("filtroCliente3",  [...new Set(data.map(d=>d.DIRECCION_CLIENTE).filter(Boolean))].sort());
-  llenar("filtroCliente4",  [...new Set(data.map(d=>d.DIRECCION_CLIENTE).filter(Boolean))].sort());
-
-  document.getElementById("filtroDistrito1").onchange = tabla1;
-  document.getElementById("filtroDistrito2").onchange = tabla2;
-  document.getElementById("filtroCliente3").onchange  = tabla3;
-  document.getElementById("filtroCliente4").onchange  = tabla4;
-}
-
-function llenar(id, vals) {
-  const s = document.getElementById(id);
-  const ph = s.options[0].text;
-  s.innerHTML = `<option value="">${ph}</option>`;
-  vals.forEach(v => { s.innerHTML += `<option value="${v}">${v}</option>`; });
-}
-
-// ── TABLA 0 ──────────────────────────────────────────────
-function tabla0() {
-  const mProd = {}, mCli = {};
-  data.forEach(r => {
-    if (r.DESCRIPCION_ITEM) mProd[r.DESCRIPCION_ITEM] = (mProd[r.DESCRIPCION_ITEM]||0)+Number(r.TOTAL_ITEM||0);
-    const kc = [r.DIRECCION_CLIENTE, r.NOMBRE_CLIENTE].filter(Boolean).join(" · ");
-    if (kc) mCli[kc] = (mCli[kc]||0)+Number(r.TOTAL_ITEM||0);
+  const dists = [...new Set(data.map(d=>d.DISTRITO).filter(Boolean))].sort();
+  ["filtroDistrito1","filtroDistrito2"].forEach(id=>{
+    const s=document.getElementById(id);
+    s.innerHTML='<option value="">Distrito</option>';
+    dists.forEach(d=>s.innerHTML+=`<option>${d}</option>`);
   });
-
-  document.getElementById("p0-content").innerHTML = `
-    <div class="grid2">
-      <div class="card">
-        <div class="card-title">🥇 Top 10 Productos <span class="badge">Monto S/</span></div>
-        <div class="tbl-wrap">${buildTop10Table(mProd,"Producto","Total (S/)")}</div>
-      </div>
-      <div class="card">
-        <div class="card-title">🥇 Top 10 Clientes <span class="badge">Monto S/</span></div>
-        <div class="tbl-wrap">${buildTop10Table(mCli,"Cliente","Total (S/)")}</div>
-      </div>
-    </div>`;
+  filtroDistrito1.onchange=tabla1;
+  filtroDistrito2.onchange=tabla2;
 }
 
-function buildTop10Table(map, labelG, labelV) {
-  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  if (!entries.length) return empty("Sin datos.");
-  const medals = ["🥇","🥈","🥉"];
-  let h = `<table><thead><tr><th>Pos</th><th>${labelG}</th><th class="num">${labelV}</th></tr></thead><tbody>`;
-  entries.forEach(([k,val],i) => {
-    const rankClass = i<3 ? `rank-${i+1}` : "rank-n";
-    const pos = i<3 ? medals[i] : `${i+1}`;
-    h += `<tr><td class="rank-num ${rankClass}">${pos}</td><td>${k}</td><td class="num">${val.toLocaleString("es-PE",{minimumFractionDigits:2})}</td></tr>`;
-  });
-  return h + "</tbody></table>";
-}
-
-// ── TABLA 1 ──────────────────────────────────────────────
-function tabla1() {
-  const f = document.getElementById("filtroDistrito1").value;
-  if (!f) { document.getElementById("tabla1").innerHTML = empty("Selecciona un distrito.","🗺"); return; }
-  renderSimple(data.filter(r=>r.DISTRITO===f), "DESCRIPCION_ITEM","TOTAL_ITEM","Producto","Total (S/)","tabla1",10);
-}
-
-// ── TABLA 2 ──────────────────────────────────────────────
-function tabla2() {
-  const f = document.getElementById("filtroDistrito2").value;
-  if (!f) { document.getElementById("tabla2").innerHTML = empty("Selecciona un distrito.","🗺"); return; }
-  renderMulti(data.filter(r=>r.DISTRITO===f),["DIRECCION_CLIENTE","NOMBRE_CLIENTE"],"TOTAL_ITEM","Cliente","Total (S/)","tabla2",10);
-}
-
-// ── TABLA 3 ──────────────────────────────────────────────
-function tabla3() {
-  const f = document.getElementById("filtroCliente3").value;
-  if (!f) { document.getElementById("tabla3").innerHTML = empty("Selecciona un cliente.","👤"); return; }
-  renderSimple(data.filter(r=>r.DIRECCION_CLIENTE===f),"DESCRIPCION_ITEM","TOTAL_ITEM","Producto","Total (S/)","tabla3",10);
-}
-
-// ── TABLA 4 ──────────────────────────────────────────────
-function tabla4() {
-  const f = document.getElementById("filtroCliente4").value;
-  if (!f) { document.getElementById("tabla4").innerHTML = empty("Selecciona un cliente.","📅"); return; }
-
-  const filtered = data.filter(r=>r.DIRECCION_CLIENTE===f);
-  if (!filtered.length) { document.getElementById("tabla4").innerHTML = empty("Sin datos para este cliente."); return; }
-
-  const formatFecha = val => {
-    if (!val) return "";
-    if (typeof val === "number") {
-      const d = XLSX.SSF.parse_date_code(val);
-      if (d) return `${String(d.d).padStart(2,"0")}/${String(d.m).padStart(2,"0")}/${d.y} ${String(d.H).padStart(2,"0")}:${String(d.M).padStart(2,"0")}`;
-    }
-    return String(val).split(".")[0];
-  };
-
-  const grupos = {};
-  filtered.forEach(r => {
-    const fecha = formatFecha(r.FECHA)||"Sin fecha";
-    if (!grupos[fecha]) grupos[fecha]=[];
-    grupos[fecha].push(r);
-  });
-
-  const fechas = Object.keys(grupos).sort((a,b)=>b.localeCompare(a));
-  let h = `<table><thead><tr><th>Fecha</th><th>Producto</th><th class="num">Cantidad</th></tr></thead><tbody>`;
-  fechas.forEach(fecha => {
-    const items = grupos[fecha];
-    const total = items.reduce((s,r)=>s+Number(r.CANTIDAD_ITEM||0),0);
-    h += `<tr class="row-fecha"><td>${fecha}</td><td></td><td></td></tr>`;
-    items.forEach(r => {
-      h += `<tr class="row-item"><td></td><td>${r.DESCRIPCION_ITEM||""}</td><td class="num">${Number(r.CANTIDAD_ITEM||0).toLocaleString()}</td></tr>`;
-    });
-    h += `<tr class="row-total"><td colspan="2">${fecha} — Total</td><td class="num">${total.toLocaleString()}</td></tr>`;
-  });
-  h += "</tbody></table>";
-  document.getElementById("tabla4").innerHTML = h;
-}
-
-// ── HELPERS ──────────────────────────────────────────────
-function renderSimple(rows, g, v, labelG, labelV, id, top=null) {
+/* ========= TABLAS ========= */
+function resumen(){
   const m={};
-  rows.forEach(r=>{const k=r[g];if(!k)return;m[k]=(m[k]||0)+Number(r[v]||0);});
-  let entries=Object.entries(m).sort((a,b)=>b[1]-a[1]);
-  if(top) entries=entries.slice(0,top);
-  if(!entries.length){document.getElementById(id).innerHTML=empty("Sin datos.");return;}
-  const medals=["🥇","🥈","🥉"];
-  let h=`<table><thead><tr><th>Pos</th><th>${labelG}</th><th class="num">${labelV}</th></tr></thead><tbody>`;
-  entries.forEach(([k,val],i)=>{
-    const rc=i<3?`rank-${i+1}`:"rank-n";
-    const pos=i<3?medals[i]:`${i+1}`;
-    h+=`<tr><td class="rank-num ${rc}">${pos}</td><td>${k}</td><td class="num">${val.toLocaleString("es-PE",{minimumFractionDigits:2})}</td></tr>`;
+  data.forEach(r=>{
+    m[r.DESCRIPCION_ITEM]=(m[r.DESCRIPCION_ITEM]||0)+Number(r.TOTAL_ITEM||0);
   });
-  document.getElementById(id).innerHTML=h+"</tbody></table>";
+  document.getElementById("p0-content").innerHTML = build(m,"Producto");
 }
 
-function renderMulti(rows, g, v, labelG, labelV, id, top=null) {
+function tabla1(){
+  const d=filtroDistrito1.value;
+  const f=data.filter(r=>r.DISTRITO===d);
   const m={};
-  rows.forEach(r=>{const k=g.map(x=>r[x]||"").join(" · ");m[k]=(m[k]||0)+Number(r[v]||0);});
-  let entries=Object.entries(m).sort((a,b)=>b[1]-a[1]);
-  if(top) entries=entries.slice(0,top);
-  if(!entries.length){document.getElementById(id).innerHTML=empty("Sin datos.");return;}
-  const medals=["🥇","🥈","🥉"];
-  let h=`<table><thead><tr><th>Pos</th><th>${labelG}</th><th class="num">${labelV}</th></tr></thead><tbody>`;
-  entries.forEach(([k,val],i)=>{
-    const rc=i<3?`rank-${i+1}`:"rank-n";
-    const pos=i<3?medals[i]:`${i+1}`;
-    h+=`<tr><td class="rank-num ${rc}">${pos}</td><td>${k}</td><td class="num">${val.toLocaleString("es-PE",{minimumFractionDigits:2})}</td></tr>`;
+  f.forEach(r=>m[r.DESCRIPCION_ITEM]=(m[r.DESCRIPCION_ITEM]||0)+Number(r.TOTAL_ITEM||0));
+  tabla1.innerHTML = build(m,"Producto");
+}
+
+function tabla2(){
+  const d=filtroDistrito2.value;
+  const f=data.filter(r=>r.DISTRITO===d);
+  const m={};
+  f.forEach(r=>{
+    const k=r.NOMBRE_CLIENTE;
+    m[k]=(m[k]||0)+Number(r.TOTAL_ITEM||0);
   });
-  document.getElementById(id).innerHTML=h+"</tbody></table>";
+  tabla2.innerHTML = build(m,"Cliente");
+}
+
+function build(map,label){
+  const e=Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if(!e.length) return '<div class="empty">Sin datos</div>';
+  let h='<table><tr><th>Pos</th><th>'+label+'</th><th class="num">Total</th></tr>';
+  e.forEach(([k,v],i)=>{
+    h+=`<tr><td class="rank-num">${i+1}</td><td>${k}</td><td class="num">${v.toFixed(2)}</td></tr>`;
+  });
+  return h+'</table>';
 }
 </script>
 </body>
 </html>
+``
