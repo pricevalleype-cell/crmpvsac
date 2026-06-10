@@ -14,6 +14,11 @@
     th { background:#eee; }
     .status { font-weight:bold; margin:10px 0; }
     #debug { background:#fff3cd; padding:10px; border-radius:6px; margin-bottom:15px; font-size:12px; display:none; }
+
+    /* Estilos especiales tabla 4 */
+    .fecha-grupo td { background:#d9e1f2; font-weight:bold; }
+    .fecha-total td { background:#e2efda; font-weight:bold; }
+    .item-row td:first-child { padding-left: 30px; color:#555; }
   </style>
 </head>
 <body>
@@ -50,7 +55,7 @@
 
 <!-- TABLA 4 -->
 <div class="box">
-  <h2>Tabla 4 – Ventas x Cliente (Cantidad)</h2>
+  <h2>Tabla 4 – Ventas x Cliente (Detalle por Fecha)</h2>
   <label>Dirección Cliente:</label>
   <select id="filtroCliente4"></select>
   <div id="tabla4"></div>
@@ -60,26 +65,25 @@
 import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 let data = [];
-let colMap = {}; // mapeo: clave normalizada -> nombre real en el archivo
+let colMap = {};
 
 const norm = t => String(t).toUpperCase().trim()
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .replace(/\s+/g, " ");
 
-// Columnas que necesitamos (normalizadas)
 const COLS = {
-  DISTRITO:           "DISTRITO",
-  DESCRIPCION_ITEM:   "DESCRIPCION (ITEM)",
-  TOTAL_ITEM:         "TOTAL (ITEM)",
-  CANTIDAD_ITEM:      "CANTIDAD (ITEM)",
-  DIRECCION_CLIENTE:  "DIRECCION (CLIENTE)",
-  NOMBRE_CLIENTE:     "NOMBRE (CLIENTE)"
+  DISTRITO:          "DISTRITO",
+  DESCRIPCION_ITEM:  "DESCRIPCION (ITEM)",
+  TOTAL_ITEM:        "TOTAL (ITEM)",
+  CANTIDAD_ITEM:     "CANTIDAD (ITEM)",
+  DIRECCION_CLIENTE: "DIRECCION (CLIENTE)",
+  NOMBRE_CLIENTE:    "NOMBRE (CLIENTE)",
+  FECHA:             "FECHA"
 };
 
 document.getElementById("fileInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
-
   document.getElementById("status").textContent = "⏳ Procesando archivo...";
 
   const reader = new FileReader();
@@ -93,17 +97,14 @@ document.getElementById("fileInput").addEventListener("change", e => {
       return;
     }
 
-    // Detectar columnas reales del archivo y mapearlas
     const realKeys = Object.keys(rows[0]);
     colMap = {};
     realKeys.forEach(k => { colMap[norm(k)] = k; });
 
-    // Mostrar debug con columnas detectadas
     const debugEl = document.getElementById("debug");
     debugEl.style.display = "block";
     debugEl.innerHTML = `<strong>Columnas detectadas:</strong><br>${realKeys.join(" | ")}`;
 
-    // Normalizar datos usando los nombres reales detectados
     data = rows.map(r => {
       const o = {};
       Object.entries(COLS).forEach(([alias, expected]) => {
@@ -168,11 +169,79 @@ function tabla3() {
 
 function tabla4() {
   const f = document.getElementById("filtroCliente4").value;
-  renderSimple(
-    data.filter(r => !f || r.DIRECCION_CLIENTE === f),
-    "DESCRIPCION_ITEM", "CANTIDAD_ITEM",
-    "Producto", "Cantidad", "tabla4"
-  );
+  const filtered = data.filter(r => !f || r.DIRECCION_CLIENTE === f);
+
+  if (!filtered.length) {
+    document.getElementById("tabla4").innerHTML = "<p>Sin datos para mostrar.</p>";
+    return;
+  }
+
+  // Formatear fecha: si es número Excel, convertir; si es string, usar tal cual
+  const formatFecha = val => {
+    if (!val) return "";
+    if (typeof val === "number") {
+      // Número serial de Excel → fecha
+      const date = XLSX.SSF.parse_date_code(val);
+      if (date) {
+        const d = String(date.d).padStart(2,"0");
+        const m = String(date.m).padStart(2,"0");
+        const y = date.y;
+        const H = String(date.H).padStart(2,"0");
+        const M = String(date.M).padStart(2,"0");
+        return `${d}/${m}/${y} ${H}:${M}`;
+      }
+    }
+    // Si ya es string, intentar limpiar
+    return String(val).split(".")[0]; // quitar milisegundos si los hay
+  };
+
+  // Agrupar por fecha
+  const grupos = {};
+  filtered.forEach(r => {
+    const fecha = formatFecha(r.FECHA) || "Sin fecha";
+    if (!grupos[fecha]) grupos[fecha] = [];
+    grupos[fecha].push(r);
+  });
+
+  // Ordenar fechas descendente
+  const fechasOrdenadas = Object.keys(grupos).sort((a, b) => b.localeCompare(a));
+
+  let h = `<table>
+    <tr>
+      <th>Fecha</th>
+      <th>Descripción (Item)</th>
+      <th style="text-align:right">Cantidad</th>
+    </tr>`;
+
+  fechasOrdenadas.forEach(fecha => {
+    const items = grupos[fecha];
+    const totalFecha = items.reduce((s, r) => s + Number(r.CANTIDAD_ITEM || 0), 0);
+
+    // Fila de fecha (agrupadora)
+    h += `<tr class="fecha-grupo">
+      <td>${fecha}</td>
+      <td></td>
+      <td></td>
+    </tr>`;
+
+    // Filas de items
+    items.forEach(r => {
+      h += `<tr class="item-row">
+        <td></td>
+        <td>${r.DESCRIPCION_ITEM || ""}</td>
+        <td style="text-align:right">${Number(r.CANTIDAD_ITEM || 0).toLocaleString()}</td>
+      </tr>`;
+    });
+
+    // Fila total por fecha
+    h += `<tr class="fecha-total">
+      <td colspan="2">${fecha} Total</td>
+      <td style="text-align:right">${totalFecha.toLocaleString()}</td>
+    </tr>`;
+  });
+
+  h += "</table>";
+  document.getElementById("tabla4").innerHTML = h;
 }
 
 function recalcularTodo() {
