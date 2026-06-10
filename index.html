@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Dashboard Ventas 3 Meses</title>
 
-  <!-- ✅ CARGA CORRECTA DE SHEETJS -->
+  <!-- ✅ SheetJS correcto -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -83,49 +83,74 @@
 <script>
 let data = [];
 
-document.getElementById("fileInput").addEventListener("change", function(e) {
+// ✅ CARGA CORRECTA DEL ARCHIVO
+document.getElementById("fileInput").addEventListener("change", function (e) {
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(evt) {
-    const wb = XLSX.read(evt.target.result, { type: "binary" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    data = XLSX.utils.sheet_to_json(ws);
+
+  reader.onload = function (event) {
+    const arrayBuffer = event.target.result;
+    const workbook = XLSX.read(arrayBuffer, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
     cargarFiltros();
     renderAll();
   };
-  reader.readAsBinaryString(file);
+
+  reader.readAsArrayBuffer(file);
 });
 
+// ✅ FILTROS
 function cargarFiltros() {
-  llenarSelect("filtroDistrito", [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]);
-  llenarSelect("filtroDireccion", [...new Set(data.map(d => d["DIRECCIÓN (CLIENTE)"]).filter(Boolean))]);
+  llenarSelect(
+    "filtroDistrito",
+    [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]
+  );
+
+  llenarSelect(
+    "filtroDireccion",
+    [...new Set(data.map(d => d["DIRECCIÓN (CLIENTE)"]).filter(Boolean))]
+  );
 }
 
 function llenarSelect(id, valores) {
-  const s = document.getElementById(id);
-  s.innerHTML = "<option value=''>Todos</option>";
-  valores.forEach(v => s.innerHTML += `<option value="${v}">${v}</option>`);
-  s.onchange = renderAll;
+  const select = document.getElementById(id);
+  select.innerHTML = "<option value=''>Todos</option>";
+  valores.forEach(v => {
+    select.innerHTML += `<option value="${v}">${v}</option>`;
+  });
+  select.onchange = renderAll;
 }
 
+// ✅ TABS
 function showTab(n) {
-  [1,2,3,4].forEach(i => document.getElementById("tab"+i).classList.add("hidden"));
+  [1,2,3,4].forEach(i =>
+    document.getElementById("tab"+i).classList.add("hidden")
+  );
   document.getElementById("tab"+n).classList.remove("hidden");
 }
 
+// ✅ RENDER GENERAL
 function renderAll() {
   const distrito = document.getElementById("filtroDistrito").value;
   const direccion = document.getElementById("filtroDireccion").value;
 
   renderTabla(filtrar(distrito, null), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab1");
-  renderTablaMultiple(filtrar(distrito, null), ["DIRECCIÓN (CLIENTE)", "NOMBRE (CLIENTE)"], "TOTAL (ITEM)", "tab2");
+  renderTablaMultiple(
+    filtrar(distrito, null),
+    ["DIRECCIÓN (CLIENTE)", "NOMBRE (CLIENTE)"],
+    "TOTAL (ITEM)",
+    "tab2"
+  );
   renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab3");
   renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "CANTIDAD (ITEM)", "tab4");
 }
 
+// ✅ FILTRADO
 function filtrar(distrito, direccion) {
   return data.filter(d =>
     (!distrito || d["DISTRITO"] === distrito) &&
@@ -133,6 +158,7 @@ function filtrar(distrito, direccion) {
   );
 }
 
+// ✅ TABLA SIMPLE
 function renderTabla(rows, groupBy, valueField, containerId) {
   const map = {};
   rows.forEach(r => {
@@ -141,13 +167,17 @@ function renderTabla(rows, groupBy, valueField, containerId) {
   });
 
   let html = `<table><tr><th>${groupBy}</th><th>${valueField}</th></tr>`;
-  Object.entries(map).sort((a,b) => b[1]-a[1]).forEach(([k,v]) =>
-    html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`
-  );
+  Object.entries(map)
+    .sort((a,b) => b[1] - a[1])
+    .forEach(([k,v]) => {
+      html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`;
+    });
   html += "</table>";
+
   document.getElementById(containerId).innerHTML = html;
 }
 
+// ✅ TABLA JERÁRQUICA
 function renderTablaMultiple(rows, groupBy, valueField, containerId) {
   const map = {};
   rows.forEach(r => {
@@ -156,13 +186,17 @@ function renderTablaMultiple(rows, groupBy, valueField, containerId) {
   });
 
   let html = `<table><tr><th>${groupBy.join(" / ")}</th><th>${valueField}</th></tr>`;
-  Object.entries(map).sort((a,b) => b[1]-a[1]).forEach(([k,v]) =>
-    html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`
-  );
+  Object.entries(map)
+    .sort((a,b) => b[1] - a[1])
+    .forEach(([k,v]) => {
+      html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`;
+    });
   html += "</table>";
+
   document.getElementById(containerId).innerHTML = html;
 }
 </script>
 
 </body>
 </html>
+``
