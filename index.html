@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Dashboard Ventas 3 Meses</title>
 
-  <!-- ✅ SheetJS CORRECTAMENTE CARGADO -->
+  <!-- ✅ CARGA CORRECTA DE SHEETJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -15,12 +15,154 @@
     }
 
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
     .filters, .tabs {
       margin: 15px 0;
     }
 
-    select, input {
+    select, input, button {
       padding: 6px;
+      margin-right: 8px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: white;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+
+    th {
+      background: #eee;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>📊 Dashboard Ventas 3 Meses</h1>
+
+<input type="file" id="fileInput" accept=".xlsx,.csv">
+
+<div class="filters">
+  <label>Distrito:</label>
+  <select id="filtroDistrito"></select>
+
+  <label>Dirección Cliente:</label>
+  <select id="filtroDireccion"></select>
+</div>
+
+<div class="tabs">
+  <button onclick="showTab(1)">Producto x Distrito</button>
+  <button onclick="showTab(2)">Cliente x Distrito</button>
+  <button onclick="showTab(3)">Producto x Cliente (S/)</button>
+  <button onclick="showTab(4)">Ventas x Cliente (Cantidad)</button>
+</div>
+
+<div id="tab1"></div>
+<div id="tab2" class="hidden"></div>
+<div id="tab3" class="hidden"></div>
+<div id="tab4" class="hidden"></div>
+
+<script>
+let data = [];
+
+document.getElementById("fileInput").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const wb = XLSX.read(evt.target.result, { type: "binary" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(ws);
+
+    cargarFiltros();
+    renderAll();
+  };
+  reader.readAsBinaryString(file);
+});
+
+function cargarFiltros() {
+  llenarSelect("filtroDistrito", [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]);
+  llenarSelect("filtroDireccion", [...new Set(data.map(d => d["DIRECCIÓN (CLIENTE)"]).filter(Boolean))]);
+}
+
+function llenarSelect(id, valores) {
+  const s = document.getElementById(id);
+  s.innerHTML = "<option value=''>Todos</option>";
+  valores.forEach(v => s.innerHTML += `<option value="${v}">${v}</option>`);
+  s.onchange = renderAll;
+}
+
+function showTab(n) {
+  [1,2,3,4].forEach(i => document.getElementById("tab"+i).classList.add("hidden"));
+  document.getElementById("tab"+n).classList.remove("hidden");
+}
+
+function renderAll() {
+  const distrito = document.getElementById("filtroDistrito").value;
+  const direccion = document.getElementById("filtroDireccion").value;
+
+  renderTabla(filtrar(distrito, null), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab1");
+  renderTablaMultiple(filtrar(distrito, null), ["DIRECCIÓN (CLIENTE)", "NOMBRE (CLIENTE)"], "TOTAL (ITEM)", "tab2");
+  renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab3");
+  renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "CANTIDAD (ITEM)", "tab4");
+}
+
+function filtrar(distrito, direccion) {
+  return data.filter(d =>
+    (!distrito || d["DISTRITO"] === distrito) &&
+    (!direccion || d["DIRECCIÓN (CLIENTE)"] === direccion)
+  );
+}
+
+function renderTabla(rows, groupBy, valueField, containerId) {
+  const map = {};
+  rows.forEach(r => {
+    if (!r[groupBy]) return;
+    map[r[groupBy]] = (map[r[groupBy]] || 0) + Number(r[valueField] || 0);
+  });
+
+  let html = `<table><tr><th>${groupBy}</th><th>${valueField}</th></tr>`;
+  Object.entries(map).sort((a,b) => b[1]-a[1]).forEach(([k,v]) =>
+    html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`
+  );
+  html += "</table>";
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function renderTablaMultiple(rows, groupBy, valueField, containerId) {
+  const map = {};
+  rows.forEach(r => {
+    const key = groupBy.map(g => r[g]).join(" | ");
+    map[key] = (map[key] || 0) + Number(r[valueField] || 0);
+  });
+
+  let html = `<table><tr><th>${groupBy.join(" / ")}</th><th>${valueField}</th></tr>`;
+  Object.entries(map).sort((a,b) => b[1]-a[1]).forEach(([k,v]) =>
+    html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`
+  );
+  html += "</table>";
+  document.getElementById(containerId).innerHTML = html;
+}
+</script>
+
+</body>
+</html>
