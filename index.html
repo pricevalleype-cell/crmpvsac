@@ -4,53 +4,18 @@
   <meta charset="UTF-8">
   <title>Dashboard Ventas 3 Meses</title>
 
-  <!-- ✅ SheetJS correcto -->
+  <!-- ✅ SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 20px;
-    }
-
-    h1 {
-      margin-bottom: 15px;
-    }
-
-    .filters, .tabs {
-      margin: 15px 0;
-    }
-
-    select, input, button {
-      padding: 6px;
-      margin-right: 8px;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: white;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: left;
-    }
-
-    th {
-      background: #eee;
-    }
-
-    .hidden {
-      display: none;
-    }
+    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:20px; }
+    h1 { margin-bottom:15px; }
+    .filters, .tabs { margin:15px 0; }
+    select, input, button { padding:6px; margin-right:8px; }
+    table { border-collapse:collapse; width:100%; background:#fff; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:left; }
+    th { background:#eee; }
+    .hidden { display:none; }
   </style>
 </head>
 
@@ -83,19 +48,34 @@
 <script>
 let data = [];
 
-// ✅ CARGA CORRECTA DEL ARCHIVO
-document.getElementById("fileInput").addEventListener("change", function (e) {
+// 🔧 Normalizar texto (quita tildes y mayúsculas)
+function normalize(str) {
+  return str
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+// 📂 Cargar archivo
+document.getElementById("fileInput").addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
   const reader = new FileReader();
+  reader.onload = evt => {
+    const wb = XLSX.read(evt.target.result, { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
 
-  reader.onload = function (event) {
-    const arrayBuffer = event.target.result;
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(ws, { defval: "" });
 
-    data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    // ✅ Normalizar encabezados
+    data = raw.map(row => {
+      const obj = {};
+      Object.keys(row).forEach(k => {
+        obj[normalize(k)] = row[k];
+      });
+      return obj;
+    });
 
     cargarFiltros();
     renderAll();
@@ -104,96 +84,72 @@ document.getElementById("fileInput").addEventListener("change", function (e) {
   reader.readAsArrayBuffer(file);
 });
 
-// ✅ FILTROS
+// 🔽 Filtros
 function cargarFiltros() {
-  llenarSelect(
-    "filtroDistrito",
-    [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]
-  );
-
-  llenarSelect(
-    "filtroDireccion",
-    [...new Set(data.map(d => d["DIRECCIÓN (CLIENTE)"]).filter(Boolean))]
-  );
+  llenar("filtroDistrito", [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]);
+  llenar("filtroDireccion", [...new Set(data.map(d => d["DIRECCION (CLIENTE)"]).filter(Boolean))]);
 }
 
-function llenarSelect(id, valores) {
-  const select = document.getElementById(id);
-  select.innerHTML = "<option value=''>Todos</option>";
-  valores.forEach(v => {
-    select.innerHTML += `<option value="${v}">${v}</option>`;
-  });
-  select.onchange = renderAll;
+function llenar(id, valores) {
+  const s = document.getElementById(id);
+  s.innerHTML = "<option value=''>Todos</option>";
+  valores.forEach(v => s.innerHTML += `<option>${v}</option>`);
+  s.onchange = renderAll;
 }
 
-// ✅ TABS
+// 📑 Tabs
 function showTab(n) {
-  [1,2,3,4].forEach(i =>
-    document.getElementById("tab"+i).classList.add("hidden")
-  );
+  [1,2,3,4].forEach(i => document.getElementById("tab"+i).classList.add("hidden"));
   document.getElementById("tab"+n).classList.remove("hidden");
 }
 
-// ✅ RENDER GENERAL
+// 🔄 Render
 function renderAll() {
-  const distrito = document.getElementById("filtroDistrito").value;
-  const direccion = document.getElementById("filtroDireccion").value;
+  const d = document.getElementById("filtroDistrito").value;
+  const c = document.getElementById("filtroDireccion").value;
 
-  renderTabla(filtrar(distrito, null), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab1");
-  renderTablaMultiple(
-    filtrar(distrito, null),
-    ["DIRECCIÓN (CLIENTE)", "NOMBRE (CLIENTE)"],
-    "TOTAL (ITEM)",
-    "tab2"
-  );
-  renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "TOTAL (ITEM)", "tab3");
-  renderTabla(filtrar(null, direccion), "DESCRIPCIÓN (ITEM)", "CANTIDAD (ITEM)", "tab4");
+  renderTabla(filtrar(d,null), "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab1");
+  renderTablaMultiple(filtrar(d,null), ["DIRECCION (CLIENTE)","NOMBRE (CLIENTE)"], "TOTAL (ITEM)", "tab2");
+  renderTabla(filtrar(null,c), "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab3");
+  renderTabla(filtrar(null,c), "DESCRIPCION (ITEM)", "CANTIDAD (ITEM)", "tab4");
 }
 
-// ✅ FILTRADO
-function filtrar(distrito, direccion) {
-  return data.filter(d =>
-    (!distrito || d["DISTRITO"] === distrito) &&
-    (!direccion || d["DIRECCIÓN (CLIENTE)"] === direccion)
+function filtrar(d,c) {
+  return data.filter(r =>
+    (!d || r["DISTRITO"] === d) &&
+    (!c || r["DIRECCION (CLIENTE)"] === c)
   );
 }
 
-// ✅ TABLA SIMPLE
-function renderTabla(rows, groupBy, valueField, containerId) {
-  const map = {};
+// 📊 Tablas
+function renderTabla(rows, g, v, id) {
+  const m = {};
   rows.forEach(r => {
-    if (!r[groupBy]) return;
-    map[r[groupBy]] = (map[r[groupBy]] || 0) + Number(r[valueField] || 0);
+    if (!r[g]) return;
+    m[r[g]] = (m[r[g]] || 0) + Number(r[v] || 0);
   });
 
-  let html = `<table><tr><th>${groupBy}</th><th>${valueField}</th></tr>`;
-  Object.entries(map)
-    .sort((a,b) => b[1] - a[1])
-    .forEach(([k,v]) => {
-      html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`;
-    });
-  html += "</table>";
-
-  document.getElementById(containerId).innerHTML = html;
+  let h = `<table><tr><th>${g}</th><th>${v}</th></tr>`;
+  Object.entries(m).sort((a,b)=>b[1]-a[1]).forEach(([k,val]) =>
+    h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
+  );
+  h += "</table>";
+  document.getElementById(id).innerHTML = h;
 }
 
-// ✅ TABLA JERÁRQUICA
-function renderTablaMultiple(rows, groupBy, valueField, containerId) {
-  const map = {};
+function renderTablaMultiple(rows, g, v, id) {
+  const m = {};
   rows.forEach(r => {
-    const key = groupBy.map(g => r[g]).join(" | ");
-    map[key] = (map[key] || 0) + Number(r[valueField] || 0);
+    const key = g.map(x => r[x]).join(" | ");
+    m[key] = (m[key] || 0) + Number(r[v] || 0);
   });
 
-  let html = `<table><tr><th>${groupBy.join(" / ")}</th><th>${valueField}</th></tr>`;
-  Object.entries(map)
-    .sort((a,b) => b[1] - a[1])
-    .forEach(([k,v]) => {
-      html += `<tr><td>${k}</td><td>${v.toLocaleString()}</td></tr>`;
-    });
-  html += "</table>";
-
-  document.getElementById(containerId).innerHTML = html;
+  let h = `<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
+  Object.entries(m).sort((a,b)=>b[1]-a[1]).forEach(([k,val]) =>
+    h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
+  );
+  h += "</table>";
+  document.getElementById(id).innerHTML = h;
 }
 </script>
 
