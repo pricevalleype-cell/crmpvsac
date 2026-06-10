@@ -2,155 +2,78 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Ventas 3 Meses</title>
+  <title>Diagnóstico Excel</title>
 
-  <!-- ✅ SheetJS -->
+  <!-- SheetJS correcto -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f8; margin:20px; }
-    h1 { margin-bottom:15px; }
-    .filters, .tabs { margin:15px 0; }
-    select, input, button { padding:6px; margin-right:8px; }
-    table { border-collapse:collapse; width:100%; background:#fff; margin-top:10px; }
-    th, td { border:1px solid #ccc; padding:6px; text-align:left; }
-    th { background:#eee; }
-    .hidden { display:none; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .ok { color: green; }
+    .error { color: red; }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      max-height: 300px;
+      overflow: auto;
+    }
   </style>
 </head>
-
 <body>
 
-<h1>📊 Dashboard Ventas 3 Meses</h1>
+<h2>📂 Prueba de lectura de BDVENTAS3M.xlsx</h2>
 
-<input type="file" id="fileInput" accept=".xlsx,.csv">
+<input type="file" id="fileInput" accept=".xlsx">
 
-<div class="filters">
-  <label>Distrito:</label>
-  <select id="filtroDistrito"></select>
-
-  <label>Dirección Cliente:</label>
-  <select id="filtroDireccion"></select>
-</div>
-
-<div class="tabs">
-  <button onclick="showTab(1)">Producto x Distrito</button>
-  <button onclick="showTab(2)">Cliente x Distrito</button>
-  <button onclick="showTab(3)">Producto x Cliente (S/)</button>
-  <button onclick="showTab(4)">Ventas x Cliente (Cantidad)</button>
-</div>
-
-<div id="tab1"></div>
-<div id="tab2" class="hidden"></div>
-<div id="tab3" class="hidden"></div>
-<div id="tab4" class="hidden"></div>
+<div id="status"></div>
+<pre id="output"></pre>
 
 <script>
-let data = [];
-
-// 🔧 Normalizar texto (quita tildes y mayúsculas)
-function normalize(str) {
-  return str
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-// 📂 Cargar archivo
-document.getElementById("fileInput").addEventListener("change", e => {
+document.getElementById("fileInput").addEventListener("change", function(e) {
   const file = e.target.files[0];
+  const status = document.getElementById("status");
+  const output = document.getElementById("output");
+
   if (!file) return;
 
+  status.innerHTML = "⏳ Leyendo archivo...";
+  output.textContent = "";
+
   const reader = new FileReader();
-  reader.onload = evt => {
-    const wb = XLSX.read(evt.target.result, { type: "array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
 
-    const raw = XLSX.utils.sheet_to_json(ws, { defval: "" });
+  reader.onload = function(evt) {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
 
-    // ✅ Normalizar encabezados
-    data = raw.map(row => {
-      const obj = {};
-      Object.keys(row).forEach(k => {
-        obj[normalize(k)] = row[k];
-      });
-      return obj;
-    });
+      status.innerHTML = `<span class="ok">✅ Archivo leído correctamente</span>`;
 
-    cargarFiltros();
-    renderAll();
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+      output.textContent =
+        "HOJA: " + sheetName + "\n" +
+        "FILAS LEÍDAS: " + rows.length + "\n\n" +
+        "PRIMERA FILA:\n" +
+        JSON.stringify(rows[0], null, 2);
+
+    } catch (err) {
+      status.innerHTML = `<span class="error">❌ Error leyendo el archivo</span>`;
+      output.textContent = err.message;
+    }
+  };
+
+  reader.onerror = function() {
+    status.innerHTML = `<span class="error">❌ Error de FileReader</span>`;
   };
 
   reader.readAsArrayBuffer(file);
 });
-
-// 🔽 Filtros
-function cargarFiltros() {
-  llenar("filtroDistrito", [...new Set(data.map(d => d["DISTRITO"]).filter(Boolean))]);
-  llenar("filtroDireccion", [...new Set(data.map(d => d["DIRECCION (CLIENTE)"]).filter(Boolean))]);
-}
-
-function llenar(id, valores) {
-  const s = document.getElementById(id);
-  s.innerHTML = "<option value=''>Todos</option>";
-  valores.forEach(v => s.innerHTML += `<option>${v}</option>`);
-  s.onchange = renderAll;
-}
-
-// 📑 Tabs
-function showTab(n) {
-  [1,2,3,4].forEach(i => document.getElementById("tab"+i).classList.add("hidden"));
-  document.getElementById("tab"+n).classList.remove("hidden");
-}
-
-// 🔄 Render
-function renderAll() {
-  const d = document.getElementById("filtroDistrito").value;
-  const c = document.getElementById("filtroDireccion").value;
-
-  renderTabla(filtrar(d,null), "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab1");
-  renderTablaMultiple(filtrar(d,null), ["DIRECCION (CLIENTE)","NOMBRE (CLIENTE)"], "TOTAL (ITEM)", "tab2");
-  renderTabla(filtrar(null,c), "DESCRIPCION (ITEM)", "TOTAL (ITEM)", "tab3");
-  renderTabla(filtrar(null,c), "DESCRIPCION (ITEM)", "CANTIDAD (ITEM)", "tab4");
-}
-
-function filtrar(d,c) {
-  return data.filter(r =>
-    (!d || r["DISTRITO"] === d) &&
-    (!c || r["DIRECCION (CLIENTE)"] === c)
-  );
-}
-
-// 📊 Tablas
-function renderTabla(rows, g, v, id) {
-  const m = {};
-  rows.forEach(r => {
-    if (!r[g]) return;
-    m[r[g]] = (m[r[g]] || 0) + Number(r[v] || 0);
-  });
-
-  let h = `<table><tr><th>${g}</th><th>${v}</th></tr>`;
-  Object.entries(m).sort((a,b)=>b[1]-a[1]).forEach(([k,val]) =>
-    h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
-  );
-  h += "</table>";
-  document.getElementById(id).innerHTML = h;
-}
-
-function renderTablaMultiple(rows, g, v, id) {
-  const m = {};
-  rows.forEach(r => {
-    const key = g.map(x => r[x]).join(" | ");
-    m[key] = (m[key] || 0) + Number(r[v] || 0);
-  });
-
-  let h = `<table><tr><th>${g.join(" / ")}</th><th>${v}</th></tr>`;
-  Object.entries(m).sort((a,b)=>b[1]-a[1]).forEach(([k,val]) =>
-    h += `<tr><td>${k}</td><td>${val.toLocaleString()}</td></tr>`
-  );
-  h += "</table>";
-  document.getElementById(id).innerHTML = h;
-}
 </script>
 
 </body>
