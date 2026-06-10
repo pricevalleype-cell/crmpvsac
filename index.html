@@ -14,11 +14,10 @@
     th { background:#eee; }
     .status { font-weight:bold; margin:10px 0; }
     #debug { background:#fff3cd; padding:10px; border-radius:6px; margin-bottom:15px; font-size:12px; display:none; }
-
-    /* Estilos especiales tabla 4 */
+    .placeholder { color:#999; font-style:italic; margin-top:10px; }
     .fecha-grupo td { background:#d9e1f2; font-weight:bold; }
     .fecha-total td { background:#e2efda; font-weight:bold; }
-    .item-row td:first-child { padding-left: 30px; color:#555; }
+    .item-row td:first-child { padding-left:30px; color:#555; }
   </style>
 </head>
 <body>
@@ -31,34 +30,34 @@
 
 <!-- TABLA 1 -->
 <div class="box">
-  <h2>Tabla 1 – Producto x Distrito</h2>
+  <h2>Tabla 1 – Top 10 Producto x Distrito</h2>
   <label>Distrito:</label>
-  <select id="filtroDistrito1"></select>
-  <div id="tabla1"></div>
+  <select id="filtroDistrito1"><option value="">-- Selecciona un distrito --</option></select>
+  <div id="tabla1"><p class="placeholder">Selecciona un distrito para ver los datos.</p></div>
 </div>
 
 <!-- TABLA 2 -->
 <div class="box">
-  <h2>Tabla 2 – Cliente x Distrito</h2>
+  <h2>Tabla 2 – Top 10 Cliente x Distrito</h2>
   <label>Distrito:</label>
-  <select id="filtroDistrito2"></select>
-  <div id="tabla2"></div>
+  <select id="filtroDistrito2"><option value="">-- Selecciona un distrito --</option></select>
+  <div id="tabla2"><p class="placeholder">Selecciona un distrito para ver los datos.</p></div>
 </div>
 
 <!-- TABLA 3 -->
 <div class="box">
-  <h2>Tabla 3 – Producto x Cliente (Monto)</h2>
+  <h2>Tabla 3 – Top 10 Producto x Cliente (Monto)</h2>
   <label>Dirección Cliente:</label>
-  <select id="filtroCliente3"></select>
-  <div id="tabla3"></div>
+  <select id="filtroCliente3"><option value="">-- Selecciona un cliente --</option></select>
+  <div id="tabla3"><p class="placeholder">Selecciona un cliente para ver los datos.</p></div>
 </div>
 
 <!-- TABLA 4 -->
 <div class="box">
   <h2>Tabla 4 – Ventas x Cliente (Detalle por Fecha)</h2>
   <label>Dirección Cliente:</label>
-  <select id="filtroCliente4"></select>
-  <div id="tabla4"></div>
+  <select id="filtroCliente4"><option value="">-- Selecciona un cliente --</option></select>
+  <div id="tabla4"><p class="placeholder">Selecciona un cliente para ver los datos.</p></div>
 </div>
 
 <script type="module">
@@ -116,7 +115,7 @@ document.getElementById("fileInput").addEventListener("change", e => {
 
     document.getElementById("status").textContent = `✅ Archivo cargado (${data.length} filas)`;
     cargarFiltros();
-    recalcularTodo();
+    // No llamar recalcularTodo() — esperar selección del usuario
   };
   reader.readAsArrayBuffer(file);
 });
@@ -135,67 +134,70 @@ function cargarFiltros() {
 
 function llenar(id, vals) {
   const s = document.getElementById(id);
-  s.innerHTML = "<option value=''>Todos</option>";
+  // Mantener opción vacía inicial
+  const placeholder = s.options[0].text;
+  s.innerHTML = `<option value="">${placeholder}</option>`;
   vals.forEach(v => { s.innerHTML += `<option value="${v}">${v}</option>`; });
 }
 
+const PLACEHOLDER = id => `<p class="placeholder">Selecciona una opción para ver los datos.</p>`;
+
 function tabla1() {
   const f = document.getElementById("filtroDistrito1").value;
+  if (!f) { document.getElementById("tabla1").innerHTML = PLACEHOLDER(); return; }
   renderSimple(
-    data.filter(r => !f || r.DISTRITO === f),
+    data.filter(r => r.DISTRITO === f),
     "DESCRIPCION_ITEM", "TOTAL_ITEM",
-    "Producto", "Total (S/)", "tabla1"
+    "Producto", "Total (S/)", "tabla1", 10
   );
 }
 
 function tabla2() {
   const f = document.getElementById("filtroDistrito2").value;
+  if (!f) { document.getElementById("tabla2").innerHTML = PLACEHOLDER(); return; }
   renderMulti(
-    data.filter(r => !f || r.DISTRITO === f),
+    data.filter(r => r.DISTRITO === f),
     ["DIRECCION_CLIENTE", "NOMBRE_CLIENTE"],
     "TOTAL_ITEM",
-    "Cliente", "Total (S/)", "tabla2"
+    "Cliente", "Total (S/)", "tabla2", 10
   );
 }
 
 function tabla3() {
   const f = document.getElementById("filtroCliente3").value;
+  if (!f) { document.getElementById("tabla3").innerHTML = PLACEHOLDER(); return; }
   renderSimple(
-    data.filter(r => !f || r.DIRECCION_CLIENTE === f),
+    data.filter(r => r.DIRECCION_CLIENTE === f),
     "DESCRIPCION_ITEM", "TOTAL_ITEM",
-    "Producto", "Total (S/)", "tabla3"
+    "Producto", "Total (S/)", "tabla3", 10
   );
 }
 
 function tabla4() {
   const f = document.getElementById("filtroCliente4").value;
-  const filtered = data.filter(r => !f || r.DIRECCION_CLIENTE === f);
+  if (!f) { document.getElementById("tabla4").innerHTML = PLACEHOLDER(); return; }
 
+  const filtered = data.filter(r => r.DIRECCION_CLIENTE === f);
   if (!filtered.length) {
     document.getElementById("tabla4").innerHTML = "<p>Sin datos para mostrar.</p>";
     return;
   }
 
-  // Formatear fecha: si es número Excel, convertir; si es string, usar tal cual
   const formatFecha = val => {
     if (!val) return "";
     if (typeof val === "number") {
-      // Número serial de Excel → fecha
       const date = XLSX.SSF.parse_date_code(val);
       if (date) {
         const d = String(date.d).padStart(2,"0");
         const m = String(date.m).padStart(2,"0");
-        const y = date.y;
         const H = String(date.H).padStart(2,"0");
         const M = String(date.M).padStart(2,"0");
-        return `${d}/${m}/${y} ${H}:${M}`;
+        return `${d}/${m}/${date.y} ${H}:${M}`;
       }
     }
-    // Si ya es string, intentar limpiar
-    return String(val).split(".")[0]; // quitar milisegundos si los hay
+    return String(val).split(".")[0];
   };
 
-  // Agrupar por fecha
   const grupos = {};
   filtered.forEach(r => {
     const fecha = formatFecha(r.FECHA) || "Sin fecha";
@@ -203,28 +205,16 @@ function tabla4() {
     grupos[fecha].push(r);
   });
 
-  // Ordenar fechas descendente
   const fechasOrdenadas = Object.keys(grupos).sort((a, b) => b.localeCompare(a));
 
   let h = `<table>
-    <tr>
-      <th>Fecha</th>
-      <th>Descripción (Item)</th>
-      <th style="text-align:right">Cantidad</th>
-    </tr>`;
+    <tr><th>Fecha</th><th>Descripción (Item)</th><th style="text-align:right">Cantidad</th></tr>`;
 
   fechasOrdenadas.forEach(fecha => {
     const items = grupos[fecha];
     const totalFecha = items.reduce((s, r) => s + Number(r.CANTIDAD_ITEM || 0), 0);
 
-    // Fila de fecha (agrupadora)
-    h += `<tr class="fecha-grupo">
-      <td>${fecha}</td>
-      <td></td>
-      <td></td>
-    </tr>`;
-
-    // Filas de items
+    h += `<tr class="fecha-grupo"><td>${fecha}</td><td></td><td></td></tr>`;
     items.forEach(r => {
       h += `<tr class="item-row">
         <td></td>
@@ -232,8 +222,6 @@ function tabla4() {
         <td style="text-align:right">${Number(r.CANTIDAD_ITEM || 0).toLocaleString()}</td>
       </tr>`;
     });
-
-    // Fila total por fecha
     h += `<tr class="fecha-total">
       <td colspan="2">${fecha} Total</td>
       <td style="text-align:right">${totalFecha.toLocaleString()}</td>
@@ -244,43 +232,41 @@ function tabla4() {
   document.getElementById("tabla4").innerHTML = h;
 }
 
-function recalcularTodo() {
-  tabla1(); tabla2(); tabla3(); tabla4();
-}
-
-function renderSimple(rows, g, v, labelG, labelV, id) {
+function renderSimple(rows, g, v, labelG, labelV, id, top = null) {
   const m = {};
   rows.forEach(r => {
     const k = r[g];
     if (!k) return;
     m[k] = (m[k] || 0) + Number(r[v] || 0);
   });
-  const entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  let entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (top) entries = entries.slice(0, top);
   if (!entries.length) {
     document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
     return;
   }
-  let h = `<table><tr><th>${labelG}</th><th>${labelV}</th></tr>`;
-  entries.forEach(([k, val]) => {
-    h += `<tr><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  let h = `<table><tr><th>#</th><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val], i) => {
+    h += `<tr><td>${i+1}</td><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
   });
   document.getElementById(id).innerHTML = h + "</table>";
 }
 
-function renderMulti(rows, g, v, labelG, labelV, id) {
+function renderMulti(rows, g, v, labelG, labelV, id, top = null) {
   const m = {};
   rows.forEach(r => {
     const k = g.map(x => r[x] || "").join(" | ");
     m[k] = (m[k] || 0) + Number(r[v] || 0);
   });
-  const entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  let entries = Object.entries(m).sort((a, b) => b[1] - a[1]);
+  if (top) entries = entries.slice(0, top);
   if (!entries.length) {
     document.getElementById(id).innerHTML = "<p>Sin datos para mostrar.</p>";
     return;
   }
-  let h = `<table><tr><th>${labelG}</th><th>${labelV}</th></tr>`;
-  entries.forEach(([k, val]) => {
-    h += `<tr><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
+  let h = `<table><tr><th>#</th><th>${labelG}</th><th>${labelV}</th></tr>`;
+  entries.forEach(([k, val], i) => {
+    h += `<tr><td>${i+1}</td><td>${k}</td><td>${val.toLocaleString("es-PE", {minimumFractionDigits:2})}</td></tr>`;
   });
   document.getElementById(id).innerHTML = h + "</table>";
 }
