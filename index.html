@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Prueba Excel BDVENTAS3M</title>
-
-  <!-- ✅ ESTA LÍNEA ES LA CLAVE -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     .ok { color: green; font-weight: bold; }
     .error { color: red; font-weight: bold; }
-    pre { background:#f4f4f4; padding:10px; }
+    pre { background:#f4f4f4; padding:10px; border-radius:6px; }
+    #status { margin: 10px 0; font-size: 16px; }
   </style>
 </head>
 
@@ -19,48 +16,16 @@
 
 <h2>📂 Prueba de lectura de BDVENTAS3M.xlsx</h2>
 
-<input type="file" id="fileInput" accept=".xlsx">
-
+<input type="file" id="fileInput" accept=".xlsx,.xls">
 <div id="status"></div>
 <pre id="output"></pre>
 
-<script>
-document.getElementById("fileInput").addEventListener("change", function(e) {
-  const file = e.target.files[0];
-  const status = document.getElementById("status");
-  const output = document.getElementById("output");
+<script type="module">
+  import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs';
 
-  if (!file) return;
+  document.getElementById("fileInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const status = document.getElementById("status");
+    const output = document.getElementById("output");
+    if (!file) return;
 
-  status.innerHTML = "⏳ Leyendo archivo...";
-  output.textContent = "";
-
-  const reader = new FileReader();
-
-  reader.onload = function(evt) {
-    try {
-      const data = new Uint8Array(evt.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-      status.innerHTML = `<span class="ok">✅ Archivo leído correctamente</span>`;
-      output.textContent =
-        "Hoja: " + sheetName + "\n" +
-        "Filas leídas: " + rows.length + "\n\n" +
-        "Primera fila:\n" +
-        JSON.stringify(rows[0], null, 2);
-
-    } catch (err) {
-      status.innerHTML = `<span class="error">❌ Error leyendo el archivo</span>`;
-      output.textContent = err.message;
-    }
-  };
-
-  reader.readAsArrayBuffer(file);
-});
-</script>
-
-</body>
-</html>
