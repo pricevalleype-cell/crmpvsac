@@ -26,13 +26,10 @@
       color: var(--text);
       font-family: var(--font-body);
       min-height: 100dvh;
-      /* Prevent horizontal scroll/overscroll */
       overflow-x: hidden;
     }
 
-    /* ════════════════════════════════════
-       TOPBAR — fixed, mobile-safe
-    ════════════════════════════════════ */
+    /* ── TOPBAR ── */
     .topbar {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -44,7 +41,6 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 200;
-      /* Prevent text wrapping from blowing layout */
     }
     .topbar-title {
       font-family: var(--font-disp);
@@ -69,6 +65,7 @@
     }
     .status-badge.ok      { color: var(--green); }
     .status-badge.loading { color: var(--amber); }
+    .status-badge.error   { color: #f76f6f; }
 
     .upload-btn { position: relative; cursor: pointer; flex-shrink: 0; }
     .upload-btn input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
@@ -86,10 +83,38 @@
     }
     .upload-btn:active .upload-btn-inner { background: #3a7ae0; }
 
-    /* ════════════════════════════════════
-       BOTTOM NAV — mobile-first tab bar
-       Sits at the bottom on mobile, top on desktop
-    ════════════════════════════════════ */
+    /* ── TOAST NOTIFICATION ── */
+    .toast {
+      position: fixed;
+      top: calc(var(--topbar-h) + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      z-index: 500;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 4px 24px rgba(0,0,0,.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    .toast.success { background: #0d2b1f; border: 1px solid #22c98e; color: #22c98e; }
+    .toast.fail    { background: #2b0d0d; border: 1px solid #f76f6f; color: #f76f6f; }
+
+    /* ── BOTTOM NAV ── */
     .nav {
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -99,7 +124,6 @@
       z-index: 200;
       height: calc(var(--nav-h) + var(--safe-b));
       padding-bottom: var(--safe-b);
-      /* No horizontal scroll needed — tabs sized to fit */
       overflow: hidden;
     }
     .nav-tab {
@@ -117,7 +141,6 @@
       cursor: pointer;
       padding: 6px 4px 4px;
       min-width: 0;
-      /* Prevent swipe scroll on the nav itself */
       touch-action: manipulation;
       transition: color .15s;
       border-top: 2px solid transparent;
@@ -134,9 +157,7 @@
     .nav-tab.active { color: var(--accent); border-top-color: var(--accent); }
     .nav-tab:active { opacity: .7; }
 
-    /* ════════════════════════════════════
-       MAIN CONTENT
-    ════════════════════════════════════ */
+    /* ── MAIN ── */
     .main {
       padding: calc(var(--topbar-h) + 16px) 16px calc(var(--nav-h) + var(--safe-b) + 16px);
       max-width: 1400px;
@@ -151,16 +172,13 @@
     .panel-header h2 { font-family: var(--font-disp); font-size: 20px; font-weight: 700; margin-bottom: 3px; }
     .panel-header p  { font-size: 12px; color: var(--muted); }
 
-    /* ════════════════════════════════════
-       GRIDS
-    ════════════════════════════════════ */
+    /* ── GRIDS ── */
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media(max-width: 640px){ .grid2 { grid-template-columns: 1fr; } }
 
-    /* ════════════════════════════════════
-       CARDS
-    ════════════════════════════════════ */
+    /* ── CARDS ── */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .card + .card { margin-top: 16px; }
     .card-title {
       font-family: var(--font-disp);
       font-size: 13px;
@@ -173,9 +191,7 @@
     }
     .badge { font-size: 10px; font-weight: 600; background: var(--accent2); color: #fff; padding: 2px 8px; border-radius: 99px; }
 
-    /* ════════════════════════════════════
-       FILTRO CON SELECT
-    ════════════════════════════════════ */
+    /* ── FILTRO SELECT ── */
     .filter-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
     .filter-row label {
       font-size: 11px; font-weight: 600; color: var(--muted);
@@ -186,27 +202,28 @@
       font-family: var(--font-body); font-size: 13px; padding: 9px 12px;
       border-radius: 8px; outline: none; cursor: pointer;
       min-width: 200px; flex: 1;
-      /* iOS fix */
       -webkit-appearance: none; appearance: none;
     }
     .filter-row select:focus { border-color: var(--accent); }
 
-    /* ════════════════════════════════════
-       SEARCH BOX (buscador de clientes)
-    ════════════════════════════════════ */
+    /* ── BUSCADOR DE CLIENTE ── */
     .search-wrap { flex: 1; min-width: 220px; }
     .search-box { position: relative; width: 100%; }
     .search-box input {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); font-family: var(--font-body); font-size: 14px;
-      padding: 10px 38px 10px 14px; border-radius: 8px; outline: none;
-      /* iOS zoom fix: min 16px to prevent auto-zoom */
-      font-size: 16px;
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px; /* prevents iOS zoom */
+      padding: 11px 44px 11px 14px;
+      border-radius: 8px;
+      outline: none;
       transition: border-color .15s;
     }
     .search-box input:focus { border-color: var(--accent); }
-    .search-box input::placeholder { color: var(--muted); font-size: 14px; }
-    .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 15px; }
+    .search-box input::placeholder { color: var(--muted); }
+    .search-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 16px; }
 
     .search-results {
       position: absolute; top: calc(100% + 4px); left: 0; right: 0;
@@ -217,7 +234,7 @@
     }
     .search-results.open { display: block; }
     .search-result-item {
-      padding: 11px 14px; font-size: 13px; cursor: pointer;
+      padding: 12px 14px; font-size: 14px; cursor: pointer;
       border-bottom: 1px solid var(--border); color: var(--text);
       line-height: 1.4;
     }
@@ -226,19 +243,50 @@
     .search-result-item.active { background: var(--accent); color: #fff; }
     .search-result-item mark { background: transparent; color: var(--gold); font-weight: 700; }
 
-    .search-selected {
-      margin-top: 6px; font-size: 11px; color: var(--accent);
-      font-weight: 600; min-height: 18px; display: flex; align-items: center; gap: 6px;
-      flex-wrap: wrap;
+    /* ── SELECTED CLIENT CHIP ── */
+    .client-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79,142,247,.12);
+      border: 1px solid rgba(79,142,247,.3);
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin-top: 8px;
+      width: 100%;
     }
-    .search-selected .clear-btn {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: 14px; padding: 0; line-height: 1;
+    .client-chip.visible { display: flex; }
+    .client-chip-icon { font-size: 16px; flex-shrink: 0; }
+    .client-chip-text {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+    .client-chip-clear {
+      flex-shrink: 0;
+      background: rgba(107,115,148,.2);
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s, color .15s;
+      line-height: 1;
+      padding: 0;
+    }
+    .client-chip-clear:active { background: rgba(247,111,111,.25); color: #f76f6f; }
 
-    /* ════════════════════════════════════
-       TABLAS
-    ════════════════════════════════════ */
+    /* ── TABLAS ── */
     .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table { border-collapse: collapse; width: 100%; font-size: 13px; }
     thead tr { border-bottom: 1px solid var(--border); }
@@ -258,11 +306,9 @@
     .row-item td:last-child { color: var(--text); }
     .row-total td { color: var(--green); font-weight: 600; font-size: 12px; border-top: 1px solid var(--border); }
 
-    /* ════════════════════════════════════
-       MÉTRICAS (tab Frecuencia)
-    ════════════════════════════════════ */
+    /* ── MÉTRICAS ── */
     .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .metric-card { background: var(--surface2); border-radius: 10px; padding: 14px 14px; border: 1px solid var(--border); }
+    .metric-card { background: var(--surface2); border-radius: 10px; padding: 14px; border: 1px solid var(--border); }
     .metric-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
     .metric-value { font-family: var(--font-disp); font-size: 20px; font-weight: 700; color: var(--text); }
     .metric-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
@@ -275,27 +321,36 @@
     .freq-30   { background: rgba(245,166,35,.15);  color: var(--amber); }
     .freq-raro { background: rgba(107,115,148,.15); color: var(--muted); }
 
-    /* ════════════════════════════════════
-       MISC
-    ════════════════════════════════════ */
+    /* ── SECTION DIVIDERS (tabs merged) ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 24px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-label:first-of-type { margin-top: 0; }
+
+    /* ── MISC ── */
     .empty { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 13px; }
     .empty .icon { font-size: 30px; margin-bottom: 8px; }
-
-    #debug {
-      background: #2a2410; border: 1px solid #5a4a10; color: #f5c842;
-      padding: 10px 14px; border-radius: 8px; font-size: 11px;
-      margin: calc(var(--topbar-h) + 8px) 12px 0;
-      display: none; word-break: break-all;
-    }
 
     .welcome { text-align: center; padding: 60px 16px; }
     .welcome .icon { font-size: 40px; margin-bottom: 12px; }
     .welcome h3 { font-family: var(--font-disp); font-size: 22px; margin-bottom: 6px; }
     .welcome p  { color: var(--muted); font-size: 13px; }
 
-    /* ════════════════════════════════════
-       DESKTOP: mueve nav arriba
-    ════════════════════════════════════ */
+    /* ── DESKTOP ── */
     @media (min-width: 768px) {
       :root { --nav-h: 44px; }
 
@@ -326,14 +381,14 @@
         padding-right: 24px;
       }
 
-      #debug { margin-top: calc(var(--topbar-h) + var(--nav-h) + 8px); }
-
       .search-box input { font-size: 13px; }
-      .search-box input::placeholder { font-size: 13px; }
     }
   </style>
 </head>
 <body>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
 
 <!-- ── TOPBAR ── -->
 <header class="topbar">
@@ -345,35 +400,21 @@
   </label>
 </header>
 
-<!-- ── BOTTOM NAV (mobile) / TOP NAV (desktop) ── -->
+<!-- ── NAV ── -->
 <nav class="nav">
   <button class="nav-tab active" data-tab="t0">
     <span class="tab-icon">🏆</span>
     <span class="tab-label">Resumen</span>
   </button>
   <button class="nav-tab" data-tab="t1">
-    <span class="tab-icon">📦</span>
-    <span class="tab-label">Prod × Dist</span>
+    <span class="tab-icon">🗺</span>
+    <span class="tab-label">× Distrito</span>
   </button>
   <button class="nav-tab" data-tab="t2">
     <span class="tab-icon">👤</span>
-    <span class="tab-label">Cli × Dist</span>
-  </button>
-  <button class="nav-tab" data-tab="t3">
-    <span class="tab-icon">🛒</span>
-    <span class="tab-label">Prod × Cli</span>
-  </button>
-  <button class="nav-tab" data-tab="t4">
-    <span class="tab-icon">📅</span>
-    <span class="tab-label">Historial</span>
-  </button>
-  <button class="nav-tab" data-tab="t5">
-    <span class="tab-icon">📊</span>
-    <span class="tab-label">Frecuencia</span>
+    <span class="tab-label">× Cliente</span>
   </button>
 </nav>
-
-<div id="debug"></div>
 
 <main class="main">
 
@@ -392,77 +433,54 @@
     </div>
   </section>
 
-  <!-- T1: PRODUCTO × DISTRITO -->
+  <!-- T1: ANÁLISIS × DISTRITO -->
   <section class="panel" id="t1">
-    <div class="panel-header"><h2>📦 Top 10 Productos por Distrito</h2><p>Ranking por volumen en el distrito seleccionado.</p></div>
+    <div class="panel-header">
+      <h2>🗺 Análisis por Distrito</h2>
+      <p>Top 10 productos y clientes del distrito seleccionado.</p>
+    </div>
     <div class="filter-row">
       <label>Distrito</label>
-      <select id="filtroDistrito1"><option value="">— Selecciona un distrito —</option></select>
+      <select id="filtroDistrito"><option value="">— Selecciona un distrito —</option></select>
     </div>
-    <div class="card"><div class="tbl-wrap" id="tabla1"><div class="empty"><div class="icon">🗺</div>Selecciona un distrito.</div></div></div>
+
+    <div class="section-label">📦 Top 10 Productos</div>
+    <div class="card"><div class="tbl-wrap" id="tabla-dist-prod"><div class="empty"><div class="icon">🗺</div>Selecciona un distrito.</div></div></div>
+
+    <div class="section-label">👤 Top 10 Clientes</div>
+    <div class="card"><div class="tbl-wrap" id="tabla-dist-cli"><div class="empty"><div class="icon">🗺</div>Selecciona un distrito.</div></div></div>
   </section>
 
-  <!-- T2: CLIENTE × DISTRITO -->
+  <!-- T2: ANÁLISIS × CLIENTE -->
   <section class="panel" id="t2">
-    <div class="panel-header"><h2>👤 Top 10 Clientes por Distrito</h2><p>Ranking de clientes en el distrito seleccionado.</p></div>
-    <div class="filter-row">
-      <label>Distrito</label>
-      <select id="filtroDistrito2"><option value="">— Selecciona un distrito —</option></select>
+    <div class="panel-header">
+      <h2>👤 Análisis por Cliente</h2>
+      <p>Frecuencia, productos e historial del cliente seleccionado.</p>
     </div>
-    <div class="card"><div class="tbl-wrap" id="tabla2"><div class="empty"><div class="icon">🗺</div>Selecciona un distrito.</div></div></div>
-  </section>
-
-  <!-- T3: PRODUCTO × CLIENTE -->
-  <section class="panel" id="t3">
-    <div class="panel-header"><h2>🛒 Top 10 Productos por Cliente</h2><p>Productos más comprados por el cliente seleccionado.</p></div>
     <div class="filter-row">
       <label>Cliente</label>
       <div class="search-wrap">
         <div class="search-box">
-          <input type="text" id="busqCliente3" placeholder="Buscar cliente o dirección…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <input type="text" id="busqCliente" placeholder="Buscar por nombre o dirección…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
           <span class="search-icon">🔍</span>
-          <div class="search-results" id="res3"></div>
+          <div class="search-results" id="resCliente"></div>
+        </div>
+        <div class="client-chip" id="chipCliente">
+          <span class="client-chip-icon">✅</span>
+          <span class="client-chip-text" id="chipClienteText"></span>
+          <button class="client-chip-clear" id="chipClienteClear" title="Quitar selección">✕</button>
         </div>
       </div>
     </div>
-    <div class="search-selected" id="sel3"><span id="sel3txt"></span></div>
-    <div class="card"><div class="tbl-wrap" id="tabla3"><div class="empty"><div class="icon">👤</div>Busca y selecciona un cliente.</div></div></div>
-  </section>
 
-  <!-- T4: DETALLE POR FECHA -->
-  <section class="panel" id="t4">
-    <div class="panel-header"><h2>📅 Historial por Cliente</h2><p>Pedidos detallados del cliente seleccionado.</p></div>
-    <div class="filter-row">
-      <label>Cliente</label>
-      <div class="search-wrap">
-        <div class="search-box">
-          <input type="text" id="busqCliente4" placeholder="Buscar cliente o dirección…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          <span class="search-icon">🔍</span>
-          <div class="search-results" id="res4"></div>
-        </div>
-      </div>
-    </div>
-    <div class="search-selected" id="sel4"><span id="sel4txt"></span></div>
-    <div class="card"><div class="tbl-wrap" id="tabla4"><div class="empty"><div class="icon">📅</div>Busca y selecciona un cliente.</div></div></div>
-  </section>
+    <div class="section-label">📊 Frecuencia &amp; Ticket</div>
+    <div id="tablaFrecuencia"><div class="empty"><div class="icon">🔍</div>Busca y selecciona un cliente.</div></div>
 
-  <!-- T5: FRECUENCIA & TICKET -->
-  <section class="panel" id="t5">
-    <div class="panel-header"><h2>📊 Frecuencia &amp; Ticket Promedio</h2><p>Análisis de comportamiento de compra por cliente.</p></div>
-    <div class="filter-row">
-      <label>Cliente</label>
-      <div class="search-wrap">
-        <div class="search-box">
-          <input type="text" id="busqCliente5" placeholder="Buscar cliente o dirección…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          <span class="search-icon">🔍</span>
-          <div class="search-results" id="res5"></div>
-        </div>
-      </div>
-    </div>
-    <div class="search-selected" id="sel5"><span id="sel5txt"></span></div>
-    <div id="tablaFrecuencia">
-      <div class="empty"><div class="icon">🔍</div>Busca y selecciona un cliente.</div>
-    </div>
+    <div class="section-label">🛒 Top 10 Productos</div>
+    <div class="card"><div class="tbl-wrap" id="tabla-cli-prod"><div class="empty"><div class="icon">🛒</div>Selecciona un cliente.</div></div></div>
+
+    <div class="section-label">📅 Historial de Pedidos</div>
+    <div class="card"><div class="tbl-wrap" id="tabla-cli-hist"><div class="empty"><div class="icon">📅</div>Selecciona un cliente.</div></div></div>
   </section>
 
 </main>
@@ -472,6 +490,16 @@ import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 let data = [];
 let todosClientes = [];
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = "success") {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3500);
+}
 
 // ── DISTRITOS ─────────────────────────────────────────────────────────────────
 const DISTRITOS_CANONICOS = [
@@ -530,7 +558,6 @@ document.querySelectorAll(".nav-tab").forEach(btn => {
     document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
-    // Scroll to top on tab change (mobile UX)
     window.scrollTo({top:0, behavior:"smooth"});
   });
 });
@@ -557,8 +584,9 @@ document.getElementById("fileInput").addEventListener("change", e => {
         }
       }
       if (headerRowIdx===-1) {
-        statusEl.className="status-badge";
-        statusEl.textContent="❌ Sin cabecera";
+        statusEl.className="status-badge error";
+        statusEl.textContent="Sin cabecera";
+        showToast("❌ No se encontró la cabecera esperada en el archivo.", "fail");
         return;
       }
 
@@ -572,18 +600,14 @@ document.getElementById("fileInput").addEventListener("change", e => {
         rows.push(obj);
       }
       if (!rows.length) {
-        statusEl.className="status-badge";
-        statusEl.textContent="❌ Sin datos";
+        statusEl.className="status-badge error";
+        statusEl.textContent="Sin datos";
+        showToast("❌ El archivo no tiene filas de datos.", "fail");
         return;
       }
 
       const realKeys = headers, keys = {};
       for (const [alias,cands] of Object.entries(COL_CANDIDATES)) keys[alias]=findKey(realKeys,cands);
-
-      const debugEl = document.getElementById("debug");
-      debugEl.style.display = "block";
-      debugEl.innerHTML = `<strong>Fila ${headerRowIdx} | ${rows.length} filas</strong><br>`+
-        Object.entries(keys).map(([a,k])=>`${a}→<b>${k||"❌"}</b>`).join(" | ");
 
       data = rows.map(r => {
         const dir = keys.DIRECCION_CLIENTE ? String(r[keys.DIRECCION_CLIENTE]||"") : "";
@@ -603,16 +627,18 @@ document.getElementById("fileInput").addEventListener("change", e => {
 
       todosClientes = [...new Set(data.map(d=>d.CLAVE_CLIENTE).filter(Boolean))].sort();
       const distintos = [...new Set(data.map(d=>d.DISTRITO))].sort();
+
       statusEl.className = "status-badge ok";
-      statusEl.textContent = `✅ ${data.length.toLocaleString()} · ${distintos.length} dist.`;
+      statusEl.textContent = `✅ ${data.length.toLocaleString()} filas`;
+
+      showToast(`✅ Archivo cargado — ${data.length.toLocaleString()} registros · ${distintos.length} distritos · ${todosClientes.length} clientes`, "success");
 
       cargarFiltros();
       tabla0();
     } catch(err) {
-      statusEl.className = "status-badge";
-      statusEl.textContent = "❌ Error";
-      document.getElementById("debug").style.display = "block";
-      document.getElementById("debug").textContent = String(err);
+      statusEl.className = "status-badge error";
+      statusEl.textContent = "Error";
+      showToast("❌ Error al procesar el archivo: " + String(err).slice(0,80), "fail");
     }
   };
   reader.readAsArrayBuffer(file);
@@ -621,14 +647,9 @@ document.getElementById("fileInput").addEventListener("change", e => {
 // ── FILTROS ───────────────────────────────────────────────────────────────────
 function cargarFiltros() {
   const distritos = [...new Set(data.map(d=>d.DISTRITO).filter(Boolean))].sort();
-  llenarSelect("filtroDistrito1", distritos);
-  llenarSelect("filtroDistrito2", distritos);
-  document.getElementById("filtroDistrito1").onchange = tabla1;
-  document.getElementById("filtroDistrito2").onchange = tabla2;
-
-  initBuscador("busqCliente3","res3","sel3","sel3txt", c => tabla3(c));
-  initBuscador("busqCliente4","res4","sel4","sel4txt", c => tabla4(c));
-  initBuscador("busqCliente5","res5","sel5","sel5txt", c => tablaFrecuencia(c));
+  llenarSelect("filtroDistrito", distritos);
+  document.getElementById("filtroDistrito").onchange = tablaDistrito;
+  initBuscador();
 }
 
 function llenarSelect(id, vals) {
@@ -638,12 +659,13 @@ function llenarSelect(id, vals) {
   vals.forEach(v => { s.innerHTML += `<option value="${escAttr(v)}">${v}</option>`; });
 }
 
-// ── BUSCADOR GENÉRICO ─────────────────────────────────────────────────────────
-function initBuscador(inputId, resId, selContId, selTxtId, onSelect) {
-  const inp  = document.getElementById(inputId);
-  const res  = document.getElementById(resId);
-  const selC = document.getElementById(selContId);
-  const selT = document.getElementById(selTxtId);
+// ── BUSCADOR DE CLIENTE (único) ───────────────────────────────────────────────
+function initBuscador() {
+  const inp  = document.getElementById("busqCliente");
+  const res  = document.getElementById("resCliente");
+  const chip = document.getElementById("chipCliente");
+  const chipTxt = document.getElementById("chipClienteText");
+  const chipClear = document.getElementById("chipClienteClear");
   if (!inp) return;
 
   let highlightIdx = -1;
@@ -667,31 +689,27 @@ function initBuscador(inputId, resId, selContId, selTxtId, onSelect) {
     highlightIdx = -1;
     res.querySelectorAll(".search-result-item[data-val]").forEach(item => {
       item.addEventListener("mousedown", ev => { ev.preventDefault(); selectVal(item.dataset.val); });
-      // Touch support
-      item.addEventListener("touchend", ev => { ev.preventDefault(); selectVal(item.dataset.val); });
+      item.addEventListener("touchend",  ev => { ev.preventDefault(); selectVal(item.dataset.val); });
     });
   }
 
   function selectVal(val) {
     inp.value = "";
     res.classList.remove("open");
-    selT.innerHTML = `<span style="opacity:.6">✔</span> ${escHtml(val)}`;
-    let clrBtn = selC.querySelector(".clear-btn");
-    if (!clrBtn) {
-      clrBtn = document.createElement("button");
-      clrBtn.className = "clear-btn";
-      clrBtn.textContent = "✕";
-      clrBtn.title = "Limpiar";
-      clrBtn.addEventListener("click", () => {
-        inp.value = "";
-        selT.textContent = "";
-        clrBtn.remove();
-        onSelect("");
-      });
-      selC.appendChild(clrBtn);
-    }
-    onSelect(val);
+    chipTxt.textContent = val;
+    chip.classList.add("visible");
+    renderClienteTabs(val);
   }
+
+  function clearSelection() {
+    inp.value = "";
+    chip.classList.remove("visible");
+    chipTxt.textContent = "";
+    renderClienteTabs("");
+  }
+
+  chipClear.addEventListener("click", clearSelection);
+  chipClear.addEventListener("touchend", ev => { ev.preventDefault(); clearSelection(); });
 
   inp.addEventListener("input",  () => renderResults(inp.value));
   inp.addEventListener("focus",  () => { if(inp.value) renderResults(inp.value); });
@@ -741,39 +759,47 @@ function buildRanking(map, labelG) {
   return h+"</tbody></table>";
 }
 
-// ── T1: PRODUCTOS POR DISTRITO ────────────────────────────────────────────────
-function tabla1() {
-  const f=document.getElementById("filtroDistrito1").value;
-  if(!f){set("tabla1",emptyHTML("🗺","Selecciona un distrito."));return;}
-  renderRanking(data.filter(r=>r.DISTRITO===f),"DESCRIPCION_ITEM","TOTAL_ITEM","Producto","tabla1",10);
-}
+// ── T1: ANÁLISIS × DISTRITO ───────────────────────────────────────────────────
+function tablaDistrito() {
+  const f = document.getElementById("filtroDistrito").value;
+  const emptyMsg = emptyHTML("🗺","Selecciona un distrito.");
+  if (!f) {
+    set("tabla-dist-prod", emptyMsg);
+    set("tabla-dist-cli",  emptyMsg);
+    return;
+  }
+  const fRows = data.filter(r=>r.DISTRITO===f);
 
-// ── T2: CLIENTES POR DISTRITO ─────────────────────────────────────────────────
-function tabla2() {
-  const f=document.getElementById("filtroDistrito2").value;
-  if(!f){set("tabla2",emptyHTML("🗺","Selecciona un distrito."));return;}
+  // Productos
+  renderRanking(fRows, "DESCRIPCION_ITEM", "TOTAL_ITEM", "Producto", "tabla-dist-prod", 10);
+
+  // Clientes
   const m={};
-  data.filter(r=>r.DISTRITO===f).forEach(r=>{
-    if(r.CLAVE_CLIENTE) m[r.CLAVE_CLIENTE]=(m[r.CLAVE_CLIENTE]||0)+r.TOTAL_ITEM;
-  });
-  renderMapRanking(m,"Cliente","tabla2",10);
+  fRows.forEach(r=>{ if(r.CLAVE_CLIENTE) m[r.CLAVE_CLIENTE]=(m[r.CLAVE_CLIENTE]||0)+r.TOTAL_ITEM; });
+  renderMapRanking(m, "Cliente", "tabla-dist-cli", 10);
 }
 
-// ── T3: PRODUCTOS POR CLIENTE ─────────────────────────────────────────────────
-function tabla3(clave) {
-  if(!clave){set("tabla3",emptyHTML("👤","Busca y selecciona un cliente."));return;}
-  renderRanking(data.filter(r=>r.CLAVE_CLIENTE===clave),"DESCRIPCION_ITEM","TOTAL_ITEM","Producto","tabla3",10);
+// ── T2: ANÁLISIS × CLIENTE ────────────────────────────────────────────────────
+function renderClienteTabs(clave) {
+  const emptyMsg = emptyHTML("👤","Busca y selecciona un cliente.");
+  if (!clave) {
+    document.getElementById("tablaFrecuencia").innerHTML = emptyHTML("🔍","Busca y selecciona un cliente.");
+    set("tabla-cli-prod", emptyMsg);
+    set("tabla-cli-hist", emptyMsg);
+    return;
+  }
+  tablaFrecuencia(clave);
+  renderRanking(data.filter(r=>r.CLAVE_CLIENTE===clave), "DESCRIPCION_ITEM","TOTAL_ITEM","Producto","tabla-cli-prod",10);
+  tablaHistorial(clave);
 }
 
-// ── T4: HISTORIAL POR CLIENTE ─────────────────────────────────────────────────
-function tabla4(clave) {
-  if(!clave){set("tabla4",emptyHTML("📅","Busca y selecciona un cliente."));return;}
-  const filtered=data.filter(r=>r.CLAVE_CLIENTE===clave);
-  if(!filtered.length){set("tabla4",emptyHTML("📭","Sin datos."));return;}
+function tablaHistorial(clave) {
+  const filtered = data.filter(r=>r.CLAVE_CLIENTE===clave);
+  if (!filtered.length) { set("tabla-cli-hist", emptyHTML("📭","Sin datos.")); return; }
 
-  const formatFecha=val=>{
-    if(!val) return "";
-    if(typeof val==="number"){
+  const formatFecha = val => {
+    if (!val) return "";
+    if (typeof val==="number") {
       const d=XLSX.SSF.parse_date_code(val);
       if(d) return `${String(d.d).padStart(2,"0")}/${String(d.m).padStart(2,"0")}/${d.y} ${String(d.H).padStart(2,"0")}:${String(d.M).padStart(2,"0")}`;
     }
@@ -798,21 +824,18 @@ function tabla4(clave) {
     });
     h+=`<tr class="row-total"><td colspan="2">${fecha} — Total</td><td class="num">${total.toLocaleString()}</td></tr>`;
   });
-  set("tabla4",h+"</tbody></table>");
+  set("tabla-cli-hist", h+"</tbody></table>");
 }
 
-// ── T5: FRECUENCIA & TICKET ───────────────────────────────────────────────────
 function tablaFrecuencia(clave) {
-  const el=document.getElementById("tablaFrecuencia");
-  if(!el) return;
-  if(!clave){el.innerHTML=emptyHTML("🔍","Busca y selecciona un cliente.");return;}
+  const el = document.getElementById("tablaFrecuencia");
+  if (!el) return;
+  const filas = data.filter(r=>r.CLAVE_CLIENTE===clave);
+  if (!filas.length) { el.innerHTML=emptyHTML("📭","Sin datos."); return; }
 
-  const filas=data.filter(r=>r.CLAVE_CLIENTE===clave);
-  if(!filas.length){el.innerHTML=emptyHTML("📭","Sin datos.");return;}
-
-  const parseFecha=val=>{
-    if(!val) return null;
-    if(typeof val==="number"){
+  const parseFecha = val => {
+    if (!val) return null;
+    if (typeof val==="number") {
       const d=XLSX.SSF.parse_date_code(val);
       if(d) return new Date(d.y,d.m-1,d.d);
     }
@@ -904,10 +927,10 @@ function renderMapRanking(m,labelG,id,top=null){
   set(id,h+"</tbody></table>");
 }
 
-const set       = (id,html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
-const fmt       = v => Number(v).toLocaleString("es-PE",{minimumFractionDigits:2});
-const escAttr   = s => String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
-const escHtml   = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const set     = (id,html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
+const fmt     = v => Number(v).toLocaleString("es-PE",{minimumFractionDigits:2});
+const escAttr = s => String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+const escHtml = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const emptyHTML = (icon,msg) => `<div class="empty"><div class="icon">${icon}</div>${msg}</div>`;
 </script>
 </body>
